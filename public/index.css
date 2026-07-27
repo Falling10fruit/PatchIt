@@ -1,0 +1,14 @@
+body {
+    margin: 0px;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.body_section {
+    position: fixed;
+    top: 0px;
+    height: 100vh;
+    width: 100vw
+}
