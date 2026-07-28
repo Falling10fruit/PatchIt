@@ -23,6 +23,6 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js"
   },
-  "include": ["src", "images.d.ts"],
+  "include": ["src", "src/vite-env.ts"],
   "typeRoots": ["./node_modules/@types"]
 }

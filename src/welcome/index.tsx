@@ -1,4 +1,4 @@
-import css from "../welcome/index.css"
+import css from "../welcome/index.css?raw"
 
 export default function WelcomeScreen () {
     return ( <main>
