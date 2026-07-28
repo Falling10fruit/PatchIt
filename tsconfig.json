@@ -24,4 +24,5 @@
     "jsxImportSource": "solid-js"
   },
   "include": ["src", "images.d.ts"],
+  "typeRoots": ["./node_modules/@types"]
 }
