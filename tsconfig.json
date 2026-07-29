@@ -24,5 +24,6 @@
     "jsxImportSource": "solid-js"
   },
   "include": ["src", "src/vite-env.ts"],
+  "files": ["src/global.d.ts"],
   "typeRoots": ["./node_modules/@types"]
 }
