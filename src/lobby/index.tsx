@@ -1,6 +1,6 @@
 import { createSignal, For } from "solid-js";
 import css from "../lobby/index.css?raw"
-import { players_joined, set_ready } from "..";
+import { leave_room, players_joined, room_id, set_ready } from "../main";
 
 const [ready_button_text, set_ready_button_text] = createSignal("ready?")
 
@@ -8,9 +8,11 @@ export default function LobbyScreen () {
     return ( <main>
         <style>{css}</style>
 
+        <h1>room id: {room_id()}</h1> <button id="leave_button" onclick={leave_room}>leave</button>
+
         <ul>
             <For each={players_joined()}> 
-                { (name) => <li>{name}</li> }
+                { (player) => <li>{player.name} is {player.ready ? "ready!" : "not ready"}</li> }
             </For>
         </ul>
 

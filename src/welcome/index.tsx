@@ -6,7 +6,7 @@ import {
     set_new_room_player_count,
     set_this_player_name,
     this_player_name,
-} from "..";
+} from "../main";
 import css from "../welcome/index.css?raw"
 import MatrixRain from "../components/MatrixRain";
 const [log_message, set_log_message] = createSignal("");
