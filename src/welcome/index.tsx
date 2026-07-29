@@ -28,5 +28,5 @@ export default function WelcomeScreen () {
 }
 
 function handle_join_room(code: string) {
-    join_room(toUpperCase(code), set_log_message);
+    join_room(code.toLocaleUpperCase(), set_log_message);
 }

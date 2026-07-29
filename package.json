@@ -27,6 +27,7 @@
   "homepage": "https://github.com/Falling10fruit/PatchIt#readme",
   "dependencies": {
     "firebase": "^12.16.0",
+    "openai": "^7.1.0",
     "solid-js": "^1.9.14"
   }
 }
