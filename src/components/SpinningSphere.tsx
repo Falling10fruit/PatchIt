@@ -33,7 +33,7 @@ export default function SpinningSphere() {
         texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
         const baseColor = new THREE.Color("#202628");
-        const patternColor = new THREE.Color("#681f22");
+        const patternColor = new THREE.Color("#1f4268");
         const material = new THREE.MeshBasicMaterial({
             map: texture,
             side: THREE.BackSide,
@@ -49,9 +49,9 @@ export default function SpinningSphere() {
                 `
                 #ifdef USE_MAP
                     vec4 sampledDiffuseColor = texture2D(map, vMapUv);
-                    float redBias = sampledDiffuseColor.r -
-                        max(sampledDiffuseColor.g, sampledDiffuseColor.b);
-                    float patternMask = smoothstep(0.0015, 0.035, redBias);
+                    float blueBias = sampledDiffuseColor.b -
+                        max(sampledDiffuseColor.r, sampledDiffuseColor.g);
+                    float patternMask = smoothstep(0.0015, 0.035, blueBias);
                     diffuseColor.rgb = mix(
                         sphereBaseColor,
                         spherePatternColor,
@@ -61,7 +61,7 @@ export default function SpinningSphere() {
                 `,
             );
         };
-        material.customProgramCacheKey = () => "tan-pattern-sphere-v1";
+        material.customProgramCacheKey = () => "blue-pattern-sphere-v1";
 
         const sphere = new THREE.Mesh(geometry, material);
         sphere.rotation.x = -0.08;

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+project_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+project_name="$(sed -n '1p' "$project_root/.wakatime-project")"
+entity="${1:-$project_root/.wakatime-project}"
+
+if [[ "$entity" != /* ]]; then
+    entity="$project_root/$entity"
+fi
+
+if [[ ! -e "$entity" ]]; then
+    printf 'Hackatime entity does not exist: %s\n' "$entity" >&2
+    exit 2
+fi
+
+# Agent instructions and tracking internals must never be exposed as Hackatime
+# file activity. Attribute their time to the generic project marker instead.
+if [[ "$(basename -- "$entity")" == "AGENTS.md" ]] ||
+    [[ "$entity" == "$project_root/.hackatime/"* ]] ||
+    [[ "$entity" == "$project_root/.codex/"* ]]; then
+    entity="$project_root/.wakatime-project"
+fi
+
+wakatime_cli="$HOME/.wakatime/wakatime-cli"
+if [[ ! -x "$wakatime_cli" ]]; then
+    printf 'WakaTime CLI is not installed at %s\n' "$wakatime_cli" >&2
+    exit 3
+fi
+
+vscode_version="$(code --version 2>/dev/null | sed -n '1p')"
+if [[ -z "$vscode_version" ]]; then
+    vscode_version="1.0.0"
+fi
+
+arguments=(
+    --entity "$entity"
+    --project "$project_name"
+    --plugin "vscode/$vscode_version vscode-wakatime/30.2.1"
+    --category coding
+)
+
+if [[ "${2:-}" == "--write" ]]; then
+    arguments+=(--write)
+fi
+
+exec "$wakatime_cli" "${arguments[@]}"

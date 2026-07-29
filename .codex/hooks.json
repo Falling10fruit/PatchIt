@@ -1,0 +1,43 @@
+{
+  "description": "Record Codex work in Hackatime as VS Code activity.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /home/yapheth/Documents/PatchIt/.codex/hooks/hackatime.py",
+            "timeout": 5,
+            "statusMessage": "Starting VS Code Hackatime tracking"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "apply_patch|Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /home/yapheth/Documents/PatchIt/.codex/hooks/hackatime.py",
+            "timeout": 5,
+            "statusMessage": "Recording VS Code Hackatime activity"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/python3 /home/yapheth/Documents/PatchIt/.codex/hooks/hackatime.py",
+            "timeout": 5,
+            "statusMessage": "Finishing VS Code Hackatime tracking"
+          }
+        ]
+      }
+    ]
+  }
+}
