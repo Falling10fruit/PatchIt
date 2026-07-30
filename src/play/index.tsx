@@ -9,7 +9,8 @@ import css from "../play/index.css?raw";
 const [still_loading, set_still_loading] = createSignal(true);
 const [challenge, set_challenge] = createSignal<Challenge | null>(null);
 const [current_code, set_current_code] = createSignal("");
-let code_sync_interval: number | undefined;
+const [time_left, set_time_left] = createSignal(0);
+let game_tick_interval: number | undefined;
 
 const problem_filler = Array.from(
     { length: 8 },
@@ -119,16 +120,15 @@ function update_challenge() {
     if (still_loading()) set_current_code(next_challenge.broken_code);
     set_still_loading(false);
 
-    if (code_sync_interval === undefined) {
-        code_sync_interval = window.setInterval(read_code, 1000);
+    if (game_tick_interval === undefined) {
+        game_tick_interval = window.setInterval(game_tick, 1000);
     }
 }
 
-function read_code() {
-    update(
-        child(window.room_reference, `players/${window.this_user_id}/code`),
-        current_code
-    );
+function game_tick() {
+    update(child(window.room_reference, `players/${window.this_user_id}`), { code: current_code() });
+
+    set_time_left(Math.ceil((window.room_snapshot.finish_time - Date.now())/1000))
 }
 
 export default function PlayScreen() {
@@ -167,7 +167,7 @@ function Showtime() {
             <aside class="problem-panel play-panel" aria-labelledby="problem-title">
                 <header class="timer-bar">
                     <span>Timer</span>
-                    <strong>05:00</strong>
+                    <strong>{ Math.floor(time_left()/60) }:{ time_left()%60 }</strong>
                 </header>
 
                 <div class="problem-content">
