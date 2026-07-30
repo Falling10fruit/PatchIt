@@ -127,7 +127,9 @@ async function update_room(data: Room) {
             for (const [user_id, {ready}] of Object.entries(data.players)) { all_ready &&= ready; }
             if (all_ready) start_game();
         } else if (data.playing_now) {
+            console.log("hello?");
             set_current_screen(Screens.PLAY_SCREEN);
+            update_challenge();
         };
     } else if (current_screen() == Screens.PLAY_SCREEN) {
         update_challenge();
