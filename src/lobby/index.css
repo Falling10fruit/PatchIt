@@ -1,9 +1,403 @@
-main {
+.lobby-screen,
+.lobby-screen *,
+.lobby-screen *::before,
+.lobby-screen *::after {
+    box-sizing: border-box;
+}
+
+.lobby-screen {
+    --purple: #560bad;
+    --purple-dark: rgba(49, 17, 77, 0.82);
+    --panel-surface: rgba(49, 17, 77, 0.34);
+    --panel-outline: clamp(0.45rem, 0.8vw, 1rem);
+    --purple-outline: rgba(86, 11, 173, 0.38);
+    --cyan: #5aa8bf;
+    --ink: rgba(255, 255, 255, 0.72);
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    overflow: auto;
+    color: white;
+    background: #000;
+    font-family: "Intel One Mono", monospace;
+}
+
+.lobby-screen .matrix-rain,
+.lobby-screen .matrix-shade {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.lobby-screen .matrix-rain {
+    z-index: -2;
+    display: block;
+    background: #000;
+}
+
+.lobby-screen .matrix-shade {
+    z-index: -1;
+    background: rgba(37, 37, 37, 0.82);
+    opacity: 0.72;
+}
+
+.lobby-content {
+    position: relative;
+    width: min(100%, 1440px);
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: clamp(1.2rem, 2.8vw, 2.7rem);
+}
+
+.lobby-header {
+    position: fixed;
+    z-index: 10;
+    top: clamp(1.2rem, 2.8vw, 2.7rem);
+    right: clamp(1.2rem, 2.8vw, 2.7rem);
+    left: clamp(1.2rem, 2.8vw, 2.7rem);
     display: flex;
-    flex-direction: column;
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+    pointer-events: none;
+}
+
+.lobby-brand {
+    margin: 0;
+    color: var(--cyan);
+    font-family: "Jaro", sans-serif;
+    font-size: clamp(4rem, 6.4vw, 6rem);
+    font-variation-settings: "opsz" 6;
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    -webkit-text-stroke: clamp(1px, 0.14vw, 3px) #3026a7;
+    paint-order: stroke fill;
 }
 
 #leave_button {
-    float: right;
+    pointer-events: auto;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 0.8rem 1.15rem;
+    color: var(--ink);
+    background: rgba(0, 0, 0, 0.38);
+    font: 700 clamp(0.72rem, 1.1vw, 0.95rem)/1 "Intel One Mono", monospace;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+#leave_button:hover,
+#leave_button:focus-visible {
+    border-color: white;
+    color: white;
+    background: rgba(86, 11, 173, 0.46);
+    outline: none;
+}
+
+.room-code-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: clamp(2.1rem, 3.2vh, 3rem);
+    text-align: center;
+}
+
+.room-code-panel h1 {
+    order: 1;
+    max-width: 58vw;
+    margin: 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: clamp(4.2rem, 8.2vw, 7.4rem);
+    font-weight: 700;
+    line-height: 0.9;
+    letter-spacing: 0.14em;
+    text-indent: 0.14em;
+    text-overflow: ellipsis;
+    text-shadow: 0 0 2rem rgba(86, 11, 173, 0.68);
+    white-space: nowrap;
+}
+
+.room-code-panel p {
+    order: 2;
+    margin: 0.4rem 0 0;
+    color: var(--cyan);
+    font-size: clamp(0.65rem, 1vw, 0.85rem);
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+}
+
+.players-stage {
+    --ready-width: clamp(2.65rem, 4.9vw, 5.875rem);
+    --ready-outline: 1.2rem;
+    --ready-left-gap: 0rem;
+    --ready-top-gap: 1.8rem;
+    position: relative;
+    left: 0;
+    width: min(32vw, 38.375rem);
+    min-width: 17.5rem;
+    margin: clamp(0.6rem, 1.5vh, 1.2rem) auto 0;
+}
+
+.players-panel {
+    position: relative;
+    z-index: 1;
+    min-height: min(64.4vh, 43.5rem);
+    border: var(--panel-outline) solid var(--purple-outline);
+    padding: clamp(1.6rem, 3vw, 2.5rem);
+    overflow: hidden;
+    background: var(--panel-surface);
+    background-clip: padding-box;
+    box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(2px);
+}
+
+.players-panel > header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    margin-bottom: 1.25rem;
+}
+
+.players-panel h2 {
+    margin: 0;
+    border-bottom: 2px solid rgba(90, 168, 191, 0.72);
+    padding: 0 0.2em 0.08em;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: clamp(1.65rem, 2.8vw, 2.35rem);
+    line-height: 1.2;
+}
+
+.players-panel > header > span {
+    display: block;
+    color: var(--cyan);
+    font-size: clamp(0.58rem, 0.8vw, 0.72rem);
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+.players-panel ul {
+    display: grid;
+    gap: 0.65rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.players-panel li {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: 3.6rem;
+    border-left: 3px solid rgba(255, 255, 255, 0.2);
+    padding: 0.55rem 0.75rem;
+    background: rgba(0, 0, 0, 0.25);
+}
+
+.players-panel li.player-ready {
+    border-left-color: var(--cyan);
+    background: rgba(90, 168, 191, 0.1);
+}
+
+.player-avatar {
+    display: grid;
+    place-items: center;
+    width: 2.3rem;
+    height: 2.3rem;
+    color: #161616;
+    background: rgba(217, 217, 217, 0.72);
+    font-weight: 700;
+}
+
+.player-ready .player-avatar {
+    background: var(--cyan);
+}
+
+.player-name {
+    overflow: hidden;
+    font-size: clamp(0.92rem, 1.5vw, 1.12rem);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.player-status {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: clamp(0.58rem, 0.9vw, 0.72rem);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.player-ready .player-status {
+    color: var(--cyan);
+}
+
+.players-panel li.empty-player-list {
+    display: block;
+    border-left-color: rgba(255, 255, 255, 0.2);
+    padding: 1.4rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+}
+
+#ready_button {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    right: calc(-1 * var(--ready-width));
+    width: var(--ready-width);
+    height: calc(var(--ready-width) + clamp(11rem, 40.1vh, 27.1rem));
+    border: 0;
+    padding: 0;
+    color: white;
+    background: var(--purple-outline);
+    clip-path: polygon(0 0, 100% var(--ready-width), 100% 100%, 0 100%);
+    font: 700 clamp(1.2rem, 1.9vw, 1.65rem)/1 "Intel One Mono", monospace;
+    cursor: pointer;
+}
+
+#ready_button::before {
+    position: absolute;
+    top: var(--ready-top-gap);
+    right: var(--ready-outline);
+    bottom: var(--ready-outline);
+    left: var(--ready-left-gap);
+    background: rgba(31, 20, 40, 0.84);
+    clip-path: polygon(
+        0 0,
+        100% calc(var(--ready-width) - var(--ready-left-gap) - var(--ready-outline)),
+        100% 100%,
+        0 100%
+    );
+    backdrop-filter: blur(2px);
+    content: "";
+}
+
+#ready_button span {
+    position: absolute;
+    z-index: 1;
+    top: var(--ready-width);
+    right: var(--ready-outline);
+    bottom: var(--ready-outline);
+    left: var(--ready-left-gap);
+    display: grid;
+    place-items: center;
+    line-height: 1;
+    text-align: center;
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    letter-spacing: 0.02em;
+}
+
+#ready_button:hover,
+#ready_button:focus-visible {
+    color: var(--cyan);
+    outline: none;
+}
+
+#ready_button:hover::before,
+#ready_button:focus-visible::before {
+    background: rgba(67, 14, 108, 0.72);
+}
+
+#ready_button.is-ready {
+    color: #171717;
+    box-shadow: 0 0 1.5rem rgba(90, 168, 191, 0.45);
+}
+
+#ready_button.is-ready::before {
+    background: var(--cyan);
+}
+
+@media (max-width: 760px) {
+    .lobby-content {
+        padding: 1.1rem;
+    }
+
+    .lobby-header {
+        top: 1.1rem;
+        right: 1.1rem;
+        left: 1.1rem;
+        align-items: flex-start;
+    }
+
+    .lobby-brand {
+        font-size: clamp(3.8rem, 19vw, 5rem);
+    }
+
+    #leave_button {
+        padding: 0.65rem 0.7rem;
+        font-size: 0.62rem;
+    }
+
+    .room-code-panel {
+        padding-top: 6.5rem;
+    }
+
+    .room-code-panel h1 {
+        max-width: 94vw;
+        font-size: clamp(3.8rem, 20vw, 5.4rem);
+    }
+
+    .players-stage {
+        --ready-width: 2.65rem;
+        left: 0;
+        width: calc(100% - var(--ready-width));
+        min-width: 0;
+        margin: 1rem var(--ready-width) 0 0;
+    }
+
+    .players-panel {
+        min-height: 28rem;
+        padding: 1.5rem 1.25rem;
+    }
+
+    #ready_button {
+        height: calc(var(--ready-width) + 17rem);
+    }
+
+    .players-panel li {
+        grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .player-status {
+        grid-column: 2;
+    }
+}
+
+@media (max-height: 620px) and (min-width: 761px) {
+    .lobby-content {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    .lobby-header {
+        top: 1rem;
+    }
+
+    .lobby-brand {
+        font-size: 4.4rem;
+    }
+
+    .room-code-panel {
+        padding-top: 2rem;
+    }
+
+    .room-code-panel h1 {
+        font-size: 4.8rem;
+    }
+
+    .players-panel {
+        min-height: 19.75rem;
+    }
+
 }

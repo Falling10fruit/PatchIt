@@ -139,7 +139,10 @@
 #create_room_button {
     position: absolute;
     top: 21.2%;
-    left: 66.98%;
+    left: 64.33%;
+    display: grid;
+    place-items: center;
+    width: 29.9%;
     margin: 0;
     border: 0;
     padding: 0.15em 0.25em;
@@ -149,6 +152,7 @@
     font-size: clamp(2rem, 3.33vw, 4rem);
     font-weight: 700;
     line-height: 1.1;
+    text-align: center;
     white-space: nowrap;
     cursor: pointer;
 }
