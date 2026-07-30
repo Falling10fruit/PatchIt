@@ -12,12 +12,13 @@ const [current_code, set_current_code] = createSignal("");
 async function start_game() {
     set_current_screen(Screens.PLAY_SCREEN);
     set_still_loading(true);
-    await generate_problem();
 
+    const challenge = await generate_problem();
     update(window.room_reference, {
         playing_now: true,
         start_time: Date.now(),
         finish_time: Date.now() + 5 * 60 * 1000,
+        challenge: challenge
     } as Room);
 }
 
@@ -93,8 +94,7 @@ async function generate_problem() {
         input: "Difficulty: " + window.difficulty,
     });
 
-    const json_response = JSON.parse(response.output_text) as Challenge;
-    update(child(window.room_reference, "challenge"), json_response);
+    return JSON.parse(response.output_text) as Challenge;
 }
 
 function update_challenge() {
