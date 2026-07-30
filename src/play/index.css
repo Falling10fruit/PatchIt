@@ -765,7 +765,8 @@
 #code_editor::-webkit-scrollbar,
 .testcase-details::-webkit-scrollbar,
 .console-output::-webkit-scrollbar,
-.players-code-scroll::-webkit-scrollbar {
+.players-code-scroll::-webkit-scrollbar,
+.player-code-card pre::-webkit-scrollbar {
     width: 0.5rem;
     height: 0.5rem;
 }
@@ -774,7 +775,8 @@
 #code_editor::-webkit-scrollbar-track,
 .testcase-details::-webkit-scrollbar-track,
 .console-output::-webkit-scrollbar-track,
-.players-code-scroll::-webkit-scrollbar-track {
+.players-code-scroll::-webkit-scrollbar-track,
+.player-code-card pre::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.05);
 }
 
@@ -782,7 +784,8 @@
 #code_editor::-webkit-scrollbar-thumb,
 .testcase-details::-webkit-scrollbar-thumb,
 .console-output::-webkit-scrollbar-thumb,
-.players-code-scroll::-webkit-scrollbar-thumb {
+.players-code-scroll::-webkit-scrollbar-thumb,
+.player-code-card pre::-webkit-scrollbar-thumb {
     border: 1px solid rgba(24, 24, 24, 0.9);
     background: rgba(90, 168, 191, 0.62);
 }
@@ -791,7 +794,8 @@
 #code_editor::-webkit-scrollbar-button,
 .testcase-details::-webkit-scrollbar-button,
 .console-output::-webkit-scrollbar-button,
-.players-code-scroll::-webkit-scrollbar-button {
+.players-code-scroll::-webkit-scrollbar-button,
+.player-code-card pre::-webkit-scrollbar-button {
     display: none;
 }
 
@@ -886,14 +890,18 @@
 
 .player-code-card pre {
     flex: 1;
+    min-width: 0;
     min-height: 0;
     margin: 0;
     padding: 0.75rem;
-    overflow: hidden;
+    overflow: auto;
     color: rgba(235, 235, 235, 0.58);
     background: var(--panel-deep);
     font: 400 clamp(0.55rem, 0.7vw, 0.7rem)/1.5 "Intel One Mono", monospace;
-    white-space: pre-wrap;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--cyan) rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+    white-space: pre;
 }
 
 .player-code-card.is-empty {
