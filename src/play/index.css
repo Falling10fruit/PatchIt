@@ -65,7 +65,7 @@
 
 .loading-view img {
     display: block;
-    width: min(22rem, 70vw);
+    width: min(9rem, 70vw);
     height: auto;
 }
 
