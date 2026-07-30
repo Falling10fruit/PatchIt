@@ -21,9 +21,12 @@ declare global {
 
     interface Window {
         open_ai_client: OpenAI;
-        difficulty: number;
+        
         this_user_id: string;
+        
         room_reference: DatabaseReference;
+        room_snapshot: Room;
+        difficulty: number;
     }
 }
 
