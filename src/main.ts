@@ -53,7 +53,7 @@ function create_room () {
         name: this_player_name(),
         ready: false, code: ""
     } ]);
-    
+
     set_room_id(new_room_code);
     enter_lobby(window.room_reference);
 }
@@ -119,10 +119,9 @@ function leave_room() {
 
 async function update_room(data: Room) {
     window.room_snapshot = data;
+    set_players_joined(Object.entries(data.players).map(([id, player]) => player));
 
     if (current_screen() == Screens.LOBBY_SCREEN) {
-        set_players_joined(Object.entries(data.players).map(([id, player]) => player));
-
         if (data.host == window.this_user_id) {
             let all_ready = true;
             for (const [user_id, {ready}] of Object.entries(data.players)) { all_ready &&= ready; }

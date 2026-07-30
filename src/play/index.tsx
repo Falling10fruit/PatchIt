@@ -1,8 +1,9 @@
-import { createSignal, Match, Switch } from "solid-js";
+import { createSignal, For, Match, Switch } from "solid-js";
 import css from "../play/index.css?raw"
 import { Screens, set_current_screen } from "..";
 import { child, update } from "firebase/database";
 import loading_gif from "../play/loading.gif"
+import { players_joined } from "../main";
 
 const [still_loading, set_still_loading] = createSignal(true);
 const [problem_description, set_problem_description] = createSignal("");
@@ -18,8 +19,6 @@ async function start_game() {
         start_time: Date.now(),
         finish_time: Date.now() + 5 * 60 * 1000,
     } as Room);
-
-    update_challenge();
 }
 
 async function generate_problem() {
@@ -129,6 +128,17 @@ function LoadingScreen() {
     return (<section>
         <h1>challenge loading</h1>
         <img src={loading_gif} alt="loading gif"/>
+
+        <div id="other_people">
+            <For each={players_joined()}>
+                { (player) =>
+                    <article>
+                        <p> {player.name} </p>
+                        <br />{ player.code }
+                    </article>
+                }
+            </For>
+        </div>
     </section>);
 }
 
