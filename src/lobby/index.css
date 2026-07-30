@@ -6,12 +6,11 @@
 }
 
 .lobby-screen {
-    --purple: #560bad;
-    --purple-dark: rgba(49, 17, 77, 0.82);
-    --panel-surface: rgba(49, 17, 77, 0.34);
+    --purple: var(--patchit-purple);
+    --panel-surface: var(--patchit-purple-panel);
     --panel-outline: clamp(0.45rem, 0.8vw, 1rem);
-    --purple-outline: rgba(86, 11, 173, 0.38);
-    --cyan: #5aa8bf;
+    --purple-outline: var(--patchit-purple-outline);
+    --cyan: var(--patchit-cyan);
     --ink: rgba(255, 255, 255, 0.72);
     position: relative;
     isolation: isolate;
@@ -75,7 +74,7 @@
     font-weight: 400;
     line-height: 0.9;
     letter-spacing: -0.045em;
-    -webkit-text-stroke: clamp(1px, 0.14vw, 3px) #3026a7;
+    -webkit-text-stroke: clamp(1px, 0.14vw, 3px) var(--purple);
     paint-order: stroke fill;
 }
 
@@ -309,7 +308,7 @@
 
 #ready_button:hover::before,
 #ready_button:focus-visible::before {
-    background: rgba(67, 14, 108, 0.72);
+    background: rgba(86, 11, 173, 0.72);
 }
 
 #ready_button.is-ready {

@@ -26,6 +26,7 @@ for (let i = 0; i < 10; i++) {
 } console.log("this_user_id", window.this_user_id);
 
 const [new_room_player_count, set_new_room_player_count] = createSignal(4);
+const [room_max_player_count, set_room_max_player_count] = createSignal(4);
 const [room_id, set_room_id] = createSignal("");
 const [this_player_name, set_this_player_name] = createSignal(["john", "gabrielle", "houston", "tommy", "harrison", "joey", "terry", "anna"][Math.floor(Math.random() * 8)]);
 const [players_joined, set_players_joined] = createSignal<[string, Player][]>([]);
@@ -37,6 +38,7 @@ function create_room () {
     } console.log("creating new room with id", new_room_code);
     
     set_room_id(new_room_code);
+    set_room_max_player_count(new_room_player_count());
     window.room_reference = ref(window.database, "rooms/" + new_room_code);
     set(window.room_reference, {
         host: window.this_user_id,
@@ -119,12 +121,15 @@ function leave_room() {
 
 async function update_room(data: Room) {
     window.room_snapshot = data;
-    set_players_joined(Object.entries(data.players).map(([id, player]) => [id, player]));
+    set_room_max_player_count(Math.max(1, data.max_player_count ?? new_room_player_count()));
+    set_players_joined(
+        Object.entries(data.players ?? {}).map(([id, player]) => [id, player])
+    );
 
     if (current_screen() == Screens.LOBBY_SCREEN) {
         if (data.host == window.this_user_id) {
             let all_ready = true;
-            for (const [user_id, {ready}] of Object.entries(data.players)) { all_ready &&= ready; }
+            for (const [user_id, {ready}] of Object.entries(data.players ?? {})) { all_ready &&= ready; }
             if (all_ready) start_game();
         } else if (data.playing_now) {
             console.log("hello?");
@@ -150,6 +155,7 @@ export {
     // lobby
     room_id,
     leave_room,
+    room_max_player_count,
     players_joined,
     set_ready,
 }

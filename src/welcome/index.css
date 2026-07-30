@@ -6,8 +6,8 @@
 }
 
 .welcome-screen {
-    --purple: #560bad;
-    --title: #5aa8bf;
+    --purple: var(--patchit-purple);
+    --title: var(--patchit-cyan);
     --ink: rgba(255, 255, 255, 0.66);
     position: relative;
     isolation: isolate;
@@ -62,7 +62,7 @@
     font-weight: 400;
     line-height: 1;
     letter-spacing: -0.045em;
-    -webkit-text-stroke: clamp(2px, 0.25vw, 5px) #3026a7;
+    -webkit-text-stroke: clamp(2px, 0.25vw, 5px) var(--purple);
     paint-order: stroke fill;
 }
 
@@ -74,7 +74,7 @@
     width: 31.93%;
     min-height: 25rem;
     padding: 3.35% 1.25%;
-    background: rgba(86, 11, 173, 0.33);
+    background: var(--patchit-purple-panel);
 }
 
 .settings-panel h2,

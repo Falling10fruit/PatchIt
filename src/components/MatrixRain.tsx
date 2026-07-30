@@ -3,7 +3,11 @@ import { onCleanup, onMount } from "solid-js";
 const COLUMN_WIDTH = 20;
 const FRAME_TIME = 50;
 
-export default function MatrixRain() {
+interface MatrixRainProps {
+    direction?: "vertical" | "center-outward";
+}
+
+export default function MatrixRain(props: MatrixRainProps) {
     let canvas!: HTMLCanvasElement;
 
     onMount(() => {
@@ -11,7 +15,7 @@ export default function MatrixRain() {
         if (!context) return;
 
         const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-        let columnPositions: number[] = [];
+        let characterPositions: number[] = [];
         let intervalId: number | undefined;
 
         const resize = () => {
@@ -25,8 +29,16 @@ export default function MatrixRain() {
             canvas.style.height = `${height}px`;
             context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
 
-            const columnCount = Math.floor(width / COLUMN_WIDTH) + 1;
-            columnPositions = Array(columnCount).fill(0);
+            if (props.direction === "center-outward") {
+                const rowCount = Math.floor(height / COLUMN_WIDTH) + 1;
+                characterPositions = Array.from(
+                    { length: rowCount },
+                    () => -Math.random() * width * 0.45
+                );
+            } else {
+                const columnCount = Math.floor(width / COLUMN_WIDTH) + 1;
+                characterPositions = Array(columnCount).fill(0);
+            }
 
             context.fillStyle = "#000";
             context.fillRect(0, 0, width, height);
@@ -41,16 +53,36 @@ export default function MatrixRain() {
             context.fillStyle = "#560bad";
             context.font = '15pt "Intel One Mono", monospace';
 
-            columnPositions.forEach((yPosition, columnIndex) => {
-                const character = String.fromCharCode(Math.random() * 128);
-                const xPosition = columnIndex * COLUMN_WIDTH;
+            if (props.direction === "center-outward") {
+                const center = width / 2;
 
-                context.fillText(character, xPosition, yPosition);
-                columnPositions[columnIndex] =
-                    yPosition > 100 + Math.random() * 10000
-                        ? 0
-                        : yPosition + COLUMN_WIDTH;
-            });
+                characterPositions.forEach((distance, rowIndex) => {
+                    if (distance >= 0) {
+                        const yPosition = rowIndex * COLUMN_WIDTH;
+                        const leftCharacter = String.fromCharCode(Math.random() * 128);
+                        const rightCharacter = String.fromCharCode(Math.random() * 128);
+
+                        context.fillText(leftCharacter, center - distance, yPosition);
+                        context.fillText(rightCharacter, center + distance, yPosition);
+                    }
+
+                    characterPositions[rowIndex] =
+                        distance > center + COLUMN_WIDTH
+                            ? -Math.random() * width * 0.35
+                            : distance + COLUMN_WIDTH;
+                });
+            } else {
+                characterPositions.forEach((yPosition, columnIndex) => {
+                    const character = String.fromCharCode(Math.random() * 128);
+                    const xPosition = columnIndex * COLUMN_WIDTH;
+
+                    context.fillText(character, xPosition, yPosition);
+                    characterPositions[columnIndex] =
+                        yPosition > 100 + Math.random() * 10000
+                            ? 0
+                            : yPosition + COLUMN_WIDTH;
+                });
+            }
         };
 
         const updateAnimation = () => {
