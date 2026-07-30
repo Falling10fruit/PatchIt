@@ -918,7 +918,9 @@ function Showtime() {
     const [editor_split, set_editor_split] = createSignal(66);
     const [is_resizing, set_is_resizing] = createSignal(false);
     const [is_advancing, set_is_advancing] = createSignal(false);
-    const [active_output, set_active_output] = createSignal<"testcase" | "console">("testcase");
+    const [active_output, set_active_output] = createSignal<
+        "testcase" | "console" | "analysis"
+    >("testcase");
     const [active_test_case, set_active_test_case] = createSignal(0);
     const [inline_error, set_inline_error] = createSignal<InlineError | null>(null);
     const [console_entries, set_console_entries] = createSignal<ConsoleEntry[]>([]);
@@ -1308,8 +1310,19 @@ function Showtime() {
                             >
                                 Console
                             </button>
+                            <button
+                                type="button"
+                                classList={{ "is-active": active_output() === "analysis" }}
+                                onClick={() => set_active_output("analysis")}
+                            >
+                                AI Analysis
+                            </button>
                         </nav>
-                        <span>{console_status()}</span>
+                        <span>
+                            {active_output() === "analysis"
+                                ? "Coming soon"
+                                : console_status()}
+                        </span>
                     </header>
 
                     <Switch>
@@ -1389,6 +1402,20 @@ function Showtime() {
                                     )}
                                 </For>
                             </div>
+                        </Match>
+                        <Match when={active_output() === "analysis"}>
+                            <section
+                                class="analysis-coming-soon"
+                                aria-labelledby="analysis-coming-soon-title"
+                            >
+                                <p>Post-run guidance</p>
+                                <h2 id="analysis-coming-soon-title">AI analysis is coming soon</h2>
+                                <span>
+                                    This tab will review failed tests, locate likely mistakes,
+                                    and explain why your code behaved differently from the
+                                    expected result.
+                                </span>
+                            </section>
                         </Match>
                     </Switch>
                 </section>

@@ -761,6 +761,42 @@
     color: rgba(255, 255, 255, 0.34);
 }
 
+.analysis-coming-soon {
+    display: grid;
+    align-content: center;
+    justify-items: start;
+    min-height: 0;
+    padding: clamp(1rem, 2vw, 1.5rem);
+    overflow: auto;
+    background:
+        linear-gradient(135deg, rgba(86, 11, 173, 0.16), transparent 58%),
+        var(--panel-deep);
+}
+
+.analysis-coming-soon p {
+    margin: 0 0 0.4rem;
+    color: var(--cyan);
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.analysis-coming-soon h2 {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(1rem, 1.5vw, 1.35rem);
+    line-height: 1.2;
+}
+
+.analysis-coming-soon span {
+    max-width: 46rem;
+    margin-top: 0.65rem;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: clamp(0.66rem, 0.8vw, 0.78rem);
+    line-height: 1.55;
+}
+
 .problem-content::-webkit-scrollbar,
 #code_editor::-webkit-scrollbar,
 .testcase-details::-webkit-scrollbar,
