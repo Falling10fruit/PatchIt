@@ -9,3 +9,4 @@ This app presents you with matchmaking capabilities so you and your friend can c
 - endless/zen/singleplayer mode
 - lobby settings
 - player colors
+- bug attack when someone finishes their debugging like tetris

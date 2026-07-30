@@ -1,3 +1,10 @@
+:root {
+    --patchit-purple: #560bad;
+    --patchit-cyan: #5aa8bf;
+    --patchit-purple-panel: rgba(86, 11, 173, 0.34);
+    --patchit-purple-outline: rgba(86, 11, 173, 0.38);
+}
+
 body {
     margin: 0;
     width: 100vw;
