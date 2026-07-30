@@ -40,7 +40,7 @@ async function start_game() {
         await update(window.room_reference, {
             playing_now: true,
             start_time,
-            finish_time: start_time + 5 * 60 * 1000,
+            finish_time: start_time + 5 * 60 * 10,
             challenge_pool,
             generation_status: "idle"
         });
@@ -185,6 +185,7 @@ function game_tick() {
     update_time_left();
     if (match_finished()) {
         stop_game_tick();
+        set_current_screen(Screens.GAMEOVER_SCREEN);
         return;
     }
 
