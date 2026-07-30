@@ -2,6 +2,7 @@ import { onCleanup, onMount } from "solid-js";
 
 const COLUMN_WIDTH = 20;
 const FRAME_TIME = 50;
+const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&*+-<>[]{}";
 
 interface MatrixRainProps {
     direction?: "vertical" | "center-outward";
@@ -73,7 +74,7 @@ export default function MatrixRain(props: MatrixRainProps) {
                 });
             } else {
                 characterPositions.forEach((yPosition, columnIndex) => {
-                    const character = String.fromCharCode(Math.random() * 128);
+                    const character = characters[Math.floor(Math.random() * characters.length)];
                     const xPosition = columnIndex * COLUMN_WIDTH;
 
                     context.fillText(character, xPosition, yPosition);
