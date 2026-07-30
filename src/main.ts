@@ -9,6 +9,7 @@ import { start_game, update_challenge } from "./play/index.tsx";
 
 window.open_ai_client = new OpenAI({
     apiKey: import.meta.env.VITE_API_AI_KEY,
+    baseURL: "https://api.groq.com/openai/v1",
     dangerouslyAllowBrowser: true
 });
 const app = initializeApp({
@@ -23,7 +24,6 @@ const app = initializeApp({
 
 const random_characters = "QWERTYUIOPASDFGHJKLZXCVBNM1234567890";
 window.this_user_id = "";
-window.difficulty = 5;
 for (let i = 0; i < 10; i++) {
     window.this_user_id += random_characters[Math.floor(Math.random() * random_characters.length)];
 } console.log("this_user_id", window.this_user_id);
@@ -33,6 +33,7 @@ const [room_max_player_count, set_room_max_player_count] = createSignal(4);
 const [room_id, set_room_id] = createSignal("");
 const [this_player_name, set_this_player_name] = createSignal(["john", "gabrielle", "houston", "tommy", "harrison", "joey", "terry", "anna", "jeff", "arnold", "gabby", "jones"][Math.floor(Math.random() * 12)]);
 const [players_joined, set_players_joined] = createSignal<[string, Player][]>([]);
+const [challenge_difficulty, set_challenge_difficulty] = createSignal(5);
 
 function create_room () {
     let new_room_code = "";
@@ -201,6 +202,10 @@ export {
     room_max_player_count,
     players_joined,
     set_ready,
+
+    // game settings
+    challenge_difficulty,
+    set_challenge_difficulty,
 }
 
 const root = document.getElementById("root")

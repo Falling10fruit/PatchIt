@@ -2,7 +2,12 @@ import { createEffect, createMemo, createSignal, For, Match, onCleanup, Show, Sw
 import { child, runTransaction, update } from "firebase/database";
 import { Screens, set_current_screen } from "..";
 import MatrixRain from "../components/MatrixRain";
-import { players_joined, room_id, room_max_player_count } from "../main";
+import {
+    challenge_difficulty,
+    players_joined,
+    room_id,
+    room_max_player_count
+} from "../main";
 import challenge_templates from "../play/challenges.json";
 import loading_gif from "../play/loading.gif";
 import css from "../play/index.css?raw";
@@ -18,6 +23,9 @@ let is_starting_game = false;
 const INITIAL_POOL_SIZE = 6;
 const REFILL_BATCH_SIZE = 4;
 const REFILL_THRESHOLD = 3;
+const AI_GENERATION_MAX_ATTEMPTS = 3;
+const CHALLENGE_VALIDATION_TIMEOUT_MS = 2500;
+const AI_MODEL = "qwen/qwen3.6-27b";
 const use_local_challenges = (
     import.meta.env.VITE_USE_LOCAL_CHALLENGES !== "false"
 );
@@ -79,87 +87,240 @@ async function generate_challenge_batch(start_index: number, count: number) {
     return generated_challenges;
 }
 
-async function generate_problem(pool_index: number) {
-    const response = await window.open_ai_client.responses.create({
-        model: "gpt-5.4-mini",
-        instructions: "You are the core engine of a JavaScript debugging game. Your primary task is to generate broken JavaScript code snippets for players to fix, along with automated test cases. RULES AND CONSTRAINTS: 1. Pure JavaScript Only: No HTML, CSS, DOM manipulation, or browser-specific APIs. Stick to core logic, math, array/object manipulation, algorithms, or async/await patterns. 2. Difficulty Scaling (1-100): The user will request a target difficulty. You must generate a challenge matching this scale and evaluate the final difficulty of your generated code. - 1-30 (Beginner): Simple syntax errors, typos, basic math/logic flaws, basic array iterations. - 31-70 (Intermediate): Scope issues, incorrect array methods, loose/strict equality, object mutation, variable shadowing. - 71-100 (Expert): Async/await handling, Promise chains, closure bugs, complex algorithms, prototype issues, or race conditions. 3. Fixable Bugs: Introduce 1 to 3 distinct bugs appropriate for the difficulty level. 4. Code Structure: The generated code MUST be a single function that returns a value, so it can be automatically tested. OUTPUT FORMAT: You must respond STRICTLY with a valid JSON object. Do not wrap the JSON in markdown formatting, and do not include any conversational text.",
-        text: {
-            format: {
-                type: "json_schema",
-                name: "coding_challenge",
-                strict: true,
-                schema: {
-                    type: "object",
-                    properties: {
-                        title: {
-                            type: "string",
-                            description: "The title of the coding challenge."
-                        },
-                        function_name: {
-                            type: "string",
-                            description: "The exact JavaScript function name that the test runner must call."
-                        },
-                        intended_behavior: {
-                            type: "string",
-                            description: "A detailed description of what the code is supposed to do."
-                        },
-                        broken_code: {
-                            type: "string",
-                            description: "The provided code with intentional bugs or errors for the challenge."
-                        },
-                        solution_code: {
-                            type: "string",
-                            description: "The correct solution code for the coding challenge."
-                        },
-                        difficulty_score: {
-                            type: "number",
-                            description: "A numerical score ranging from 0 to 100 representing the difficulty of the challenge."
-                        },
-                        test_cases: {
-                            type: "array",
-                            description: "List of test cases to validate solution correctness.",
-                            items: {
-                                type: "object",
-                                properties: {
-                                    input_args: {
-                                        type: "array",
-                                        description: "List of input arguments for the function.",
-                                        items: {
-                                            type: "string",
-                                            description: "String representation of a single argument."
-                                        }
-                                    },
-                                    expected_output: {
-                                        type: "string",
-                                        description: "Expected output for the test case, as a string."
-                                    }
-                                },
-                                required: ["input_args", "expected_output"],
-                                additionalProperties: false
-                            }
-                        }
-                    },
-                    required: [
-                        "title",
-                        "function_name",
-                        "intended_behavior",
-                        "broken_code",
-                        "solution_code",
-                        "difficulty_score",
-                        "test_cases"
-                    ],
-                    additionalProperties: false
-                }
+function normalize_difficulty(value: number) {
+    return Math.min(100, Math.max(1, Math.round(value)));
+}
+
+function assert_generated_challenge_shape(
+    value: unknown
+): asserts value is Omit<Challenge, "id"> {
+    if (!value || typeof value !== "object") {
+        throw new Error("The generated challenge is not an object.");
+    }
+
+    const candidate = value as Partial<Omit<Challenge, "id">>;
+    const required_text = [
+        ["title", candidate.title],
+        ["function_name", candidate.function_name],
+        ["intended_behavior", candidate.intended_behavior],
+        ["broken_code", candidate.broken_code],
+        ["solution_code", candidate.solution_code]
+    ] as const;
+
+    for (const [field, field_value] of required_text) {
+        if (typeof field_value !== "string" || field_value.trim() === "") {
+            throw new Error(`Generated ${field} must be a non-empty string.`);
+        }
+    }
+
+    if (!/^[A-Za-z_$][\w$]*$/.test(candidate.function_name!)) {
+        throw new Error("The generated function name is invalid.");
+    }
+
+    if (candidate.broken_code === candidate.solution_code) {
+        throw new Error("The broken code and solution code are identical.");
+    }
+
+    if (
+        typeof candidate.difficulty_score !== "number"
+        || !Number.isFinite(candidate.difficulty_score)
+        || candidate.difficulty_score < 1
+        || candidate.difficulty_score > 100
+    ) {
+        throw new Error("Generated difficulty must be between 1 and 100.");
+    }
+
+    if (
+        !Array.isArray(candidate.test_cases)
+        || candidate.test_cases.length < 3
+        || candidate.test_cases.length > 6
+    ) {
+        throw new Error("A generated challenge must have 3 to 6 test cases.");
+    }
+
+    candidate.test_cases.forEach((test_case, test_index) => {
+        if (!test_case || !Array.isArray(test_case.input_args)) {
+            throw new Error(`Test case ${test_index + 1} has invalid arguments.`);
+        }
+
+        test_case.input_args.forEach((input_arg, argument_index) => {
+            if (typeof input_arg !== "string") {
+                throw new Error(
+                    `Test case ${test_index + 1}, argument ${argument_index + 1} must be a string.`
+                );
             }
-        },
-        input: "Difficulty: " + window.difficulty
+
+            try {
+                JSON.parse(input_arg);
+            } catch {
+                throw new Error(
+                    `Test case ${test_index + 1}, argument ${argument_index + 1} is not valid JSON.`
+                );
+            }
+        });
+
+        if (typeof test_case.expected_output !== "string") {
+            throw new Error(
+                `Test case ${test_index + 1} expected output must be a string.`
+            );
+        }
+
+        try {
+            JSON.parse(test_case.expected_output);
+        } catch {
+            throw new Error(
+                `Test case ${test_index + 1} expected output is not valid JSON.`
+            );
+        }
+    });
+}
+
+type ValidationExecution =
+    | { results: TestResult[]; error?: never }
+    | { results?: never; error: string };
+
+function execute_for_generation_validation(
+    code: string,
+    generated_challenge: Challenge
+) {
+    return new Promise<ValidationExecution>((resolve) => {
+        let worker: Worker;
+        let timeout: number | undefined;
+        let finished = false;
+
+        const finish = (result: ValidationExecution) => {
+            if (finished) return;
+            finished = true;
+            if (timeout !== undefined) window.clearTimeout(timeout);
+            worker?.terminate();
+            resolve(result);
+        };
+
+        try {
+            worker = create_execution_worker(code, generated_challenge);
+        } catch (error) {
+            resolve({
+                error: error instanceof Error
+                    ? error.message
+                    : "Unable to start challenge validation."
+            });
+            return;
+        }
+
+        worker.onmessage = (event: MessageEvent<WorkerOutput>) => {
+            if (event.data.type === "test_results") {
+                finish({ results: event.data.results });
+            } else if (event.data.type === "error") {
+                finish({ error: event.data.message });
+            }
+        };
+
+        worker.onerror = (event) => {
+            event.preventDefault();
+            finish({ error: event.message || "Challenge validation failed." });
+        };
+
+        timeout = window.setTimeout(() => {
+            finish({ error: "Challenge validation timed out." });
+        }, CHALLENGE_VALIDATION_TIMEOUT_MS);
+    });
+}
+
+async function validate_generated_challenge(generated_challenge: Challenge) {
+    const solution_execution = await execute_for_generation_validation(
+        generated_challenge.solution_code,
+        generated_challenge
+    );
+    if ("error" in solution_execution) {
+        throw new Error(`Generated solution failed to run: ${solution_execution.error}`);
+    }
+
+    const solution_passes = (
+        solution_execution.results.length === generated_challenge.test_cases.length
+        && solution_execution.results.every((result) => result.passed)
+    );
+    if (!solution_passes) {
+        throw new Error("Generated solution does not pass every test case.");
+    }
+
+    const broken_execution = await execute_for_generation_validation(
+        generated_challenge.broken_code,
+        generated_challenge
+    );
+    const broken_code_fails = (
+        "error" in broken_execution
+        || broken_execution.results.some((result) => !result.passed)
+    );
+    if (!broken_code_fails) {
+        throw new Error("Generated broken code passes every test case.");
+    }
+}
+
+async function request_generated_problem(
+    pool_index: number,
+    target_difficulty: number
+) {
+    const response = await window.open_ai_client.chat.completions.create({
+        model: AI_MODEL,
+        temperature: 0.6,
+        messages: [
+            {
+                role: "system",
+                content: "You are the core engine of a JavaScript debugging game. Generate broken JavaScript code for players to fix, a correct solution, and automated test cases. RULES: 1. Use pure JavaScript only. Do not use HTML, CSS, DOM manipulation, browser APIs, imports, packages, or external dependencies. 2. Match the requested difficulty from 1 to 100: 1-30 beginner syntax/basic logic, 31-70 intermediate scope/array/object bugs, and 71-100 expert async/closure/algorithm bugs. 3. Introduce 1 to 3 fixable bugs. The broken code must fail at least one supplied test. 4. Both broken_code and solution_code must define one function using the exact function_name. The solution must pass every supplied test. 5. Generate 3 to 6 test cases. Every input_args item and expected_output must be a string containing valid JSON accepted by JSON.parse. 6. Return exactly these fields: title, function_name, intended_behavior, broken_code, solution_code, difficulty_score, and test_cases. Each test case must contain only input_args and expected_output. Return only one valid JSON object with no markdown or commentary."
+            },
+            {
+                role: "user",
+                content: `Target difficulty: ${target_difficulty} out of 100.`
+            }
+        ],
+        response_format: {
+            type: "json_object"
+        }
     });
 
-    const generated_challenge = JSON.parse(response.output_text) as Omit<Challenge, "id">;
-    return {
-        ...generated_challenge,
+    const choice = response.choices[0];
+    if (!choice || choice.finish_reason !== "stop") {
+        throw new Error(
+            `AI response ended with reason "${choice?.finish_reason ?? "missing"}".`
+        );
+    }
+    if (!choice.message.content) {
+        throw new Error("AI response did not contain a generated challenge.");
+    }
+
+    const generated_value: unknown = JSON.parse(choice.message.content);
+    assert_generated_challenge_shape(generated_value);
+
+    const generated_challenge: Challenge = {
+        ...generated_value,
         id: `ai-challenge-${pool_index + 1}`
     };
+    await validate_generated_challenge(generated_challenge);
+    return generated_challenge;
+}
+
+async function generate_problem(pool_index: number) {
+    const target_difficulty = normalize_difficulty(challenge_difficulty());
+    let latest_error: unknown;
+
+    for (let attempt = 1; attempt <= AI_GENERATION_MAX_ATTEMPTS; attempt++) {
+        try {
+            return await request_generated_problem(pool_index, target_difficulty);
+        } catch (error) {
+            latest_error = error;
+            console.warn(
+                `Challenge ${pool_index + 1} generation attempt ${attempt} failed:`,
+                error
+            );
+        }
+    }
+
+    const reason = latest_error instanceof Error
+        ? latest_error.message
+        : "Unknown generation error.";
+    throw new Error(
+        `Unable to generate a valid challenge after ${AI_GENERATION_MAX_ATTEMPTS} attempts: ${reason}`
+    );
 }
 
 function update_challenge() {

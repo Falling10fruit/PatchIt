@@ -49,6 +49,5 @@ declare global {
         
         room_reference: DatabaseReference;
         room_snapshot: Room;
-        difficulty: number;
     }
 }
