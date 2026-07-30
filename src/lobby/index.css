@@ -19,23 +19,16 @@
     min-height: 100dvh;
     overflow: auto;
     color: white;
-    background: #000;
+    background: transparent;
     font-family: "Intel One Mono", monospace;
 }
 
-.lobby-screen .matrix-rain,
 .lobby-screen .matrix-shade {
     position: fixed;
     inset: 0;
     width: 100%;
     height: 100%;
     pointer-events: none;
-}
-
-.lobby-screen .matrix-rain {
-    z-index: -2;
-    display: block;
-    background: #000;
 }
 
 .lobby-screen .matrix-shade {

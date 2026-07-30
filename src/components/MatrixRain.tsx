@@ -32,9 +32,10 @@ export default function MatrixRain(props: MatrixRainProps) {
 
             if (props.direction === "center-outward") {
                 const rowCount = Math.floor(height / COLUMN_WIDTH) + 1;
+                const outwardSpan = width / 2 + COLUMN_WIDTH;
                 characterPositions = Array.from(
                     { length: rowCount },
-                    () => -Math.random() * width * 0.45
+                    () => Math.random() * outwardSpan
                 );
             } else {
                 const columnCount = Math.floor(width / COLUMN_WIDTH) + 1;
@@ -56,21 +57,17 @@ export default function MatrixRain(props: MatrixRainProps) {
 
             if (props.direction === "center-outward") {
                 const center = width / 2;
+                const outwardSpan = center + COLUMN_WIDTH;
 
                 characterPositions.forEach((distance, rowIndex) => {
-                    if (distance >= 0) {
-                        const yPosition = rowIndex * COLUMN_WIDTH;
-                        const leftCharacter = String.fromCharCode(Math.random() * 128);
-                        const rightCharacter = String.fromCharCode(Math.random() * 128);
+                    const yPosition = rowIndex * COLUMN_WIDTH;
+                    const leftCharacter = characters[Math.floor(Math.random() * characters.length)];
+                    const rightCharacter = characters[Math.floor(Math.random() * characters.length)];
 
-                        context.fillText(leftCharacter, center - distance, yPosition);
-                        context.fillText(rightCharacter, center + distance, yPosition);
-                    }
-
+                    context.fillText(leftCharacter, center - distance, yPosition);
+                    context.fillText(rightCharacter, center + distance, yPosition);
                     characterPositions[rowIndex] =
-                        distance > center + COLUMN_WIDTH
-                            ? -Math.random() * width * 0.35
-                            : distance + COLUMN_WIDTH;
+                        (distance + COLUMN_WIDTH) % outwardSpan;
                 });
             } else {
                 characterPositions.forEach((yPosition, columnIndex) => {

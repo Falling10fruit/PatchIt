@@ -8,7 +8,6 @@ import {
     this_player_name,
 } from "../main";
 import css from "../welcome/index.css?raw"
-import MatrixRain from "../components/MatrixRain";
 const [log_message, set_log_message] = createSignal("");
 
 export default function WelcomeScreen () {
@@ -16,7 +15,6 @@ export default function WelcomeScreen () {
         <style>{css}</style>
 
         <main class="welcome-screen">
-            <MatrixRain />
             <div class="matrix-shade" aria-hidden="true" />
 
             <section class="landing-content" aria-labelledby="patchit-title">

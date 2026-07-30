@@ -16,12 +16,11 @@
     min-height: 100dvh;
     overflow: hidden;
     color: white;
-    background: #000;
+    background: transparent;
     font-family: "Intel One Mono", monospace;
 }
 
-.matrix-rain,
-.matrix-shade {
+.welcome-screen .matrix-shade {
     position: fixed;
     inset: 0;
     width: 100%;
@@ -29,13 +28,7 @@
     pointer-events: none;
 }
 
-.matrix-rain {
-    z-index: -2;
-    display: block;
-    background: #000;
-}
-
-.matrix-shade {
+.welcome-screen .matrix-shade {
     z-index: -1;
     background: rgba(37, 37, 37, 0.8);
     opacity: 0.66;

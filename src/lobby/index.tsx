@@ -1,6 +1,5 @@
 import { createSignal, For } from "solid-js";
 import css from "../lobby/index.css?raw";
-import MatrixRain from "../components/MatrixRain";
 import { leave_room, players_joined, room_id, set_ready } from "../main";
 
 const [is_ready, set_is_ready] = createSignal(false);
@@ -9,7 +8,6 @@ export default function LobbyScreen() {
     return (
         <main class="lobby-screen">
             <style>{css}</style>
-            <MatrixRain />
             <div class="matrix-shade" aria-hidden="true" />
 
             <section class="lobby-content">
