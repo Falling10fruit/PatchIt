@@ -36,7 +36,7 @@ const use_lorem = true;
 async function generate_problem() {
     if (use_lorem) {
         console.warn("using lorem response");
-        return lorem_response;
+        return lorem_response.responses[Math.floor(Math.random() * lorem_response.length)] as Challenge;
     }
 
     const response = await window.open_ai_client.responses.create({

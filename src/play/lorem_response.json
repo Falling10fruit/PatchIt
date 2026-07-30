@@ -1,27 +1,319 @@
 {
-  "title": "Filter the Evens",
-  "intended_behavior": "Write a function that takes an array of numbers and returns a new array containing only the even numbers. Check how the condition inside the filter method is evaluating the numbers.",
-  "broken_code": "function filterEvens(arr) {\n  return arr.filter(num => num % 2 = 0);\n}",
-  "solution_code": "function filterEvens(arr) {\n  return arr.filter(num => num % 2 === 0);\n}",
-  "difficulty_score": 25,
-  "test_cases": [
+  "length": 6,
+  "responses": [
     {
-      "input_args": [
-        "[1, 2, 3, 4, 5]"
+      "title": "Filter the Evens",
+      "intended_behavior": "Write a function that takes an array of numbers and returns a new array containing only the even numbers. Check how the condition inside the filter method is evaluating the numbers.",
+      "broken_code": "function filterEvens(arr) {\n  return arr.filter(num => num % 2 = 0);\n}",
+      "solution_code": "function filterEvens(arr) {\n  return arr.filter(num => num % 2 === 0);\n}",
+      "difficulty_score": 25,
+      "test_cases": [
+        {
+          "input_args": ["[1, 2, 3, 4, 5]"],
+          "expected_output": "[2, 4]"
+        },
+        {
+          "input_args": ["[11, 13, 15]"],
+          "expected_output": "[]"
+        },
+        {
+          "input_args": ["[10, -2, 7, 8]"],
+          "expected_output": "[10, -2, 8]"
+        }
       ],
-      "expected_output": "[2, 4]"
+      "hidden_test_cases": [
+        {
+          "input_args": ["[]"],
+          "expected_output": "[]"
+        },
+        {
+          "input_args": ["[2, 4, 6, 8]"],
+          "expected_output": "[2, 4, 6, 8]"
+        },
+        {
+          "input_args": ["[1, 3, 5, 7]"],
+          "expected_output": "[]"
+        },
+        {
+          "input_args": ["[0, 0, 0]"],
+          "expected_output": "[0, 0, 0]"
+        },
+        {
+          "input_args": ["[-3, -5, -8, -10]"],
+          "expected_output": "[-8, -10]"
+        },
+        {
+          "input_args": ["[1000000, 1000001]"],
+          "expected_output": "[1000000]"
+        },
+        {
+          "input_args": ["[2.5, 4, 5.1, 6]"],
+          "expected_output": "[4, 6]"
+        },
+        {
+          "input_args": ["[1]"],
+          "expected_output": "[]"
+        }
+      ]
     },
     {
-      "input_args": [
-        "[11, 13, 15]"
+      "title": "Factorial Fumble",
+      "intended_behavior": "Write a function that calculates the factorial of a given positive integer (n!).",
+      "broken_code": "function calculateFactorial(n) {\n  let result = 0;\n  for (let i = 1; i < n; i++) {\n    result = result * i;\n  }\n  return result;\n}",
+      "solution_code": "function calculateFactorial(n) {\n  if (n === 0 || n === 1) return 1;\n  let result = 1;\n  for (let i = 1; i <= n; i++) {\n    result = result * i;\n  }\n  return result;\n}",
+      "difficulty_score": 15,
+      "test_cases": [
+        {
+          "input_args": ["5"],
+          "expected_output": "120"
+        },
+        {
+          "input_args": ["3"],
+          "expected_output": "6"
+        }
       ],
-      "expected_output": "[]"
+      "hidden_test_cases": [
+        {
+          "input_args": ["0"],
+          "expected_output": "1"
+        },
+        {
+          "input_args": ["1"],
+          "expected_output": "1"
+        },
+        {
+          "input_args": ["2"],
+          "expected_output": "2"
+        },
+        {
+          "input_args": ["6"],
+          "expected_output": "720"
+        },
+        {
+          "input_args": ["7"],
+          "expected_output": "5040"
+        },
+        {
+          "input_args": ["8"],
+          "expected_output": "40320"
+        },
+        {
+          "input_args": ["9"],
+          "expected_output": "362880"
+        },
+        {
+          "input_args": ["10"],
+          "expected_output": "3628800"
+        }
+      ]
     },
     {
-      "input_args": [
-        "[10, -2, 7, 8]"
+      "title": "The Longest Word",
+      "intended_behavior": "Write a function that takes a sentence string and returns the longest word in that sentence.",
+      "broken_code": "function findLongestWord(sentence) {\n  const words = sentence.split('');\n  let longest = '';\n  for (let i = 0; i < words.length; i++) {\n    if (words[i].length > longest.length) {\n      longest = words;\n    }\n  }\n  return longest;\n}",
+      "solution_code": "function findLongestWord(sentence) {\n  const words = sentence.split(' ');\n  let longest = '';\n  for (let i = 0; i < words.length; i++) {\n    if (words[i].length > longest.length) {\n      longest = words[i];\n    }\n  }\n  return longest;\n}",
+      "difficulty_score": 35,
+      "test_cases": [
+        {
+          "input_args": ["\"The quick brown fox jumped over the lazy dog\""],
+          "expected_output": "\"jumped\""
+        },
+        {
+          "input_args": ["\"Hello world\""],
+          "expected_output": "\"Hello\""
+        }
       ],
-      "expected_output": "[10, -2, 8]"
+      "hidden_test_cases": [
+        {
+          "input_args": ["\"\""],
+          "expected_output": "\"\""
+        },
+        {
+          "input_args": ["\"single\""],
+          "expected_output": "\"single\""
+        },
+        {
+          "input_args": ["\"a ab abc\""],
+          "expected_output": "\"abc\""
+        },
+        {
+          "input_args": ["\"apple peach grape\""],
+          "expected_output": "\"apple\""
+        },
+        {
+          "input_args": ["\"cat dog fish bird\""],
+          "expected_output": "\"fish\""
+        },
+        {
+          "input_args": ["\"a supercalifragilisticexpialidocious word\""],
+          "expected_output": "\"supercalifragilisticexpialidocious\""
+        },
+        {
+          "input_args": ["\"one two six ten\""],
+          "expected_output": "\"one\""
+        },
+        {
+          "input_args": ["\"this is a testing sentence\""],
+          "expected_output": "\"sentence\""
+        }
+      ]
+    },
+    {
+      "title": "Anagram Assessor",
+      "intended_behavior": "Write a function that checks if two strings are anagrams of each other (contain the exact same letters).",
+      "broken_code": "function isAnagram(str1, str2) {\n  const format = (str) => str.toLowerCase().split('').sort();\n  return format(str1) === format(str2);\n}",
+      "solution_code": "function isAnagram(str1, str2) {\n  const format = (str) => str.toLowerCase().split('').sort().join('');\n  return format(str1) === format(str2);\n}",
+      "difficulty_score": 50,
+      "test_cases": [
+        {
+          "input_args": ["\"listen\"", "\"silent\""],
+          "expected_output": "true"
+        },
+        {
+          "input_args": ["\"hello\"", "\"world\""],
+          "expected_output": "false"
+        },
+        {
+          "input_args": ["\"Debit Card\"", "\"Bad Credit\""],
+          "expected_output": "true"
+        }
+      ],
+      "hidden_test_cases": [
+        {
+          "input_args": ["\"apple\"", "\"apple\""],
+          "expected_output": "true"
+        },
+        {
+          "input_args": ["\"app\"", "\"apple\""],
+          "expected_output": "false"
+        },
+        {
+          "input_args": ["\"\"", "\"\""],
+          "expected_output": "true"
+        },
+        {
+          "input_args": ["\"a\"", "\"\""],
+          "expected_output": "false"
+        },
+        {
+          "input_args": ["\"RaceCar\"", "\"carrace\""],
+          "expected_output": "true"
+        },
+        {
+          "input_args": ["\"cat\"", "\"dog\""],
+          "expected_output": "false"
+        },
+        {
+          "input_args": ["\"dormitory\"", "\"dirty room\""],
+          "expected_output": "false"
+        },
+        {
+          "input_args": ["\"12345\"", "\"54321\""],
+          "expected_output": "true"
+        }
+      ]
+    },
+    {
+      "title": "Two Sum Target",
+      "intended_behavior": "Given an array of numbers and a target number, return an array containing the indices of the two numbers that add up to the target.",
+      "broken_code": "function twoSum(nums, target) {\n  for (let i = 0; i < nums.length; i++) {\n    for (let j = 0; j < nums.length; j++) {\n      if (nums[i] + nums[j] === target) {\n        return [i, j];\n      }\n    }\n  }\n  return [];\n}",
+      "solution_code": "function twoSum(nums, target) {\n  for (let i = 0; i < nums.length; i++) {\n    for (let j = i + 1; j < nums.length; j++) {\n      if (nums[i] + nums[j] === target) {\n        return [i, j];\n      }\n    }\n  }\n  return [];\n}",
+      "difficulty_score": 65,
+      "test_cases": [
+        {
+          "input_args": ["[2, 7, 11, 15]", "9"],
+          "expected_output": "[0, 1]"
+        },
+        {
+          "input_args": ["[3, 2, 4]", "6"],
+          "expected_output": "[1, 2]"
+        }
+      ],
+      "hidden_test_cases": [
+        {
+          "input_args": ["[1, 2, 3]", "3"],
+          "expected_output": "[0, 1]"
+        },
+        {
+          "input_args": ["[1, 2, 3, 4]", "7"],
+          "expected_output": "[2, 3]"
+        },
+        {
+          "input_args": ["[3, 3]", "6"],
+          "expected_output": "[0, 1]"
+        },
+        {
+          "input_args": ["[-1, -2, -3, -4]", "-7"],
+          "expected_output": "[2, 3]"
+        },
+        {
+          "input_args": ["[-5, 2, 10, 4]", "-1"],
+          "expected_output": "[0, 3]"
+        },
+        {
+          "input_args": ["[1, 2, 3]", "10"],
+          "expected_output": "[]"
+        },
+        {
+          "input_args": ["[0, 4, 3, 0]", "0"],
+          "expected_output": "[0, 3]"
+        },
+        {
+          "input_args": ["[1000, 2000, 3000]", "5000"],
+          "expected_output": "[1, 2]"
+        }
+      ]
+    },
+    {
+      "title": "Deep Array Flatten",
+      "intended_behavior": "Write a function that recursively flattens a deeply nested array into a single-level array.",
+      "broken_code": "function flattenArray(arr) {\n  let result = [];\n  for (let i = 0; i < arr.length; i++) {\n    if (Array.isArray(arr[i])) {\n      result.push(flattenArray(arr[i]));\n    } else {\n      result.push(arr[i]);\n    }\n  }\n  return result;\n}",
+      "solution_code": "function flattenArray(arr) {\n  let result = [];\n  for (let i = 0; i < arr.length; i++) {\n    if (Array.isArray(arr[i])) {\n      result.push(...flattenArray(arr[i]));\n    } else {\n      result.push(arr[i]);\n    }\n  }\n  return result;\n}",
+      "difficulty_score": 85,
+      "test_cases": [
+        {
+          "input_args": ["[1, [2, [3, 4], 5], 6]"],
+          "expected_output": "[1, 2, 3, 4, 5, 6]"
+        },
+        {
+          "input_args": ["[[[1]]]"],
+          "expected_output": "[1]"
+        }
+      ],
+      "hidden_test_cases": [
+        {
+          "input_args": ["[]"],
+          "expected_output": "[]"
+        },
+        {
+          "input_args": ["[1, 2, 3]"],
+          "expected_output": "[1, 2, 3]"
+        },
+        {
+          "input_args": ["[[1], [2], [3]]"],
+          "expected_output": "[1, 2, 3]"
+        },
+        {
+          "input_args": ["[[[[[[[[1]]]]]]]]"],
+          "expected_output": "[1]"
+        },
+        {
+          "input_args": ["[1, [2, [3, [4]], 5]]"],
+          "expected_output": "[1, 2, 3, 4, 5]"
+        },
+        {
+          "input_args": ["[[], [[], []]]"],
+          "expected_output": "[]"
+        },
+        {
+          "input_args": ["[\"a\", [\"b\", [\"c\"]]]"],
+          "expected_output": "[\"a\", \"b\", \"c\"]"
+        },
+        {
+          "input_args": ["[1, 2, 3, 4, [5, 6]]"],
+          "expected_output": "[1, 2, 3, 4, 5, 6]"
+        }
+      ]
     }
   ]
 }
