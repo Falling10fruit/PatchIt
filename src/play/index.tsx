@@ -102,7 +102,9 @@ function update_challenge() {
     set_current_code(window.room_snapshot.challenge.broken_code);
     console.log(window.room_snapshot.challenge.broken_code);
     set_still_loading(false);
-}
+
+    setInterval(read_code, 1000);
+} function read_code() { update(child(window.room_reference, `players/${window.this_user_id}/code`), current_code); }
 
 export default function PlayScreen () {
     return ( <main>
@@ -116,29 +118,30 @@ export default function PlayScreen () {
 }
 
 function Showtime() {
-    return (<>
+    return (<section id="main_coding_view">
         <div id="problem">{ problem_description() }</div>
         <textarea id="coding_area" value={ current_code() } oninput={
             (e) => { set_current_code(e.target.value); }
         } />
-    </>);
-}
-
-function LoadingScreen() {
-    return (<section>
-        <h1>challenge loading</h1>
-        <img src={loading_gif} alt="loading gif"/>
+        
 
         <div id="other_people">
             <For each={players_joined()}>
-                { (player) =>
-                    <article>
-                        <p> {player.name} </p>
-                        <br />{ player.code }
-                    </article>
-                }
+                { (player) => {
+                    if (player[0] != window.this_user_id) return (<article>
+                        <p> {player[1].name} </p>
+                        <br />{ player[1].code }
+                    </article>)
+                } }
             </For>
         </div>
+    </section>);
+}
+
+function LoadingScreen() {
+    return (<section id="loading_view">
+        <h1>challenge loading</h1>
+        <img src={loading_gif} alt="loading gif"/>
     </section>);
 }
 

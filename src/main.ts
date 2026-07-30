@@ -28,7 +28,7 @@ for (let i = 0; i < 10; i++) {
 const [new_room_player_count, set_new_room_player_count] = createSignal(4);
 const [room_id, set_room_id] = createSignal("");
 const [this_player_name, set_this_player_name] = createSignal(["john", "gabrielle", "houston", "tommy", "harrison", "joey", "terry", "anna"][Math.floor(Math.random() * 8)]);
-const [players_joined, set_players_joined] = createSignal<Player[]>([]);
+const [players_joined, set_players_joined] = createSignal<[string, Player][]>([]);
 
 function create_room () {
     let new_room_code = "";
@@ -49,10 +49,10 @@ function create_room () {
         start_time: 0,
         finish_time: 0,
     } as Room);
-    set_players_joined([ {
+    set_players_joined([ [window.this_user_id, {
         name: this_player_name(),
         ready: false, code: ""
-    } ]);
+    }] ]);
 
     set_room_id(new_room_code);
     enter_lobby(window.room_reference);
@@ -119,7 +119,7 @@ function leave_room() {
 
 async function update_room(data: Room) {
     window.room_snapshot = data;
-    set_players_joined(Object.entries(data.players).map(([id, player]) => player));
+    set_players_joined(Object.entries(data.players).map(([id, player]) => [id, player]));
 
     if (current_screen() == Screens.LOBBY_SCREEN) {
         if (data.host == window.this_user_id) {
