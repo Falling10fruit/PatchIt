@@ -104,9 +104,6 @@
     align-items: center;
     padding-top: clamp(2.1rem, 3.2vh, 3rem);
     text-align: center;
-
-    /**hey yapheth so we need the player to be able to like yk copy the lobby code text*/
-    user-select: text;
 }
 
 .room-code-panel h1 {
@@ -123,6 +120,9 @@
     text-overflow: ellipsis;
     text-shadow: 0 0 2rem rgba(86, 11, 173, 0.68);
     white-space: nowrap;
+
+    /**hey yapheth so we need the player to be able to like yk copy the lobby code text*/
+    user-select: text;
 }
 
 .room-code-panel p {
