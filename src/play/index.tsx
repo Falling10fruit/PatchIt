@@ -26,7 +26,7 @@ const REFILL_THRESHOLD = 3;
 const AI_GENERATION_MAX_ATTEMPTS = 3;
 const CHALLENGE_VALIDATION_TIMEOUT_MS = 2500;
 const MATCH_DURATION_MS = 5 * 60 * 1000;
-const AI_MODEL = "qwen/qwen3.6-27b";
+const AI_MODEL = "openai/gpt-oss-120b";
 const use_local_challenges = (
     import.meta.env.VITE_USE_LOCAL_CHALLENGES !== "false"
 );
@@ -274,10 +274,11 @@ async function request_generated_problem(
     const response = await window.open_ai_client.chat.completions.create({
         model: AI_MODEL,
         temperature: 0.6,
+        reasoning_effort: "low",
         messages: [
             {
                 role: "system",
-                content: "You are the core engine of a JavaScript debugging game. Generate broken JavaScript code for players to fix, a correct solution, and automated test cases. RULES: 1. Use pure JavaScript only. Do not use HTML, CSS, DOM manipulation, browser APIs, imports, packages, or external dependencies. 2. Match the requested difficulty from 1 to 100: 1-30 beginner syntax/basic logic, 31-70 intermediate scope/array/object bugs, and 71-100 expert async/closure/algorithm bugs. 3. Introduce 1 to 3 fixable bugs. The broken code must fail at least one supplied test. 4. Both broken_code and solution_code must define one function using the exact function_name. The solution must pass every supplied test. 5. Generate 3 to 6 test cases. Every input_args item and expected_output must be a string containing valid JSON accepted by JSON.parse. 6. Return exactly these fields: title, function_name, intended_behavior, broken_code, solution_code, difficulty_score, and test_cases. Each test case must contain only input_args and expected_output. Return only one valid JSON object with no markdown or commentary."
+                content: "You are the core engine of a JavaScript debugging game. Generate broken JavaScript code for players to fix, a correct solution, and automated test cases. RULES: 1. Use pure JavaScript only. Do not use HTML, CSS, DOM manipulation, browser APIs, imports, packages, or external dependencies. 2. Match the requested difficulty from 1 to 100: 1-30 beginner syntax/basic logic, 31-70 intermediate scope/array/object bugs, and 71-100 expert async/closure/algorithm bugs. 3. Introduce 1 to 3 fixable bugs. The broken code must fail at least one supplied test. 4. Both broken_code and solution_code must define one function using the exact function_name. The solution must pass every supplied test. 5. Generate 3 to 6 test cases. Every input_args item and expected_output must be a string containing valid JSON accepted by JSON.parse."
             },
             {
                 role: "user",
@@ -285,7 +286,47 @@ async function request_generated_problem(
             }
         ],
         response_format: {
-            type: "json_object"
+            type: "json_schema",
+            json_schema: {
+                name: "coding_challenge",
+                strict: true,
+                schema: {
+                    type: "object",
+                    properties: {
+                        title: { type: "string" },
+                        function_name: { type: "string" },
+                        intended_behavior: { type: "string" },
+                        broken_code: { type: "string" },
+                        solution_code: { type: "string" },
+                        difficulty_score: { type: "number" },
+                        test_cases: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    input_args: {
+                                        type: "array",
+                                        items: { type: "string" }
+                                    },
+                                    expected_output: { type: "string" }
+                                },
+                                required: ["input_args", "expected_output"],
+                                additionalProperties: false
+                            }
+                        }
+                    },
+                    required: [
+                        "title",
+                        "function_name",
+                        "intended_behavior",
+                        "broken_code",
+                        "solution_code",
+                        "difficulty_score",
+                        "test_cases"
+                    ],
+                    additionalProperties: false
+                }
+            }
         }
     });
 
