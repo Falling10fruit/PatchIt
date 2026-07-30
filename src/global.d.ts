@@ -17,10 +17,27 @@ declare global {
 
         playing_now: boolean;
         start_time: number;
+        finish_time: number;
+        challenge: Challenge
+    }
+
+    interface TestCase {
+    input_args: string[];
+    expected_output: string;
+    }
+
+    interface Challenge {
+    title: string;
+    intended_behavior: string;
+    broken_code: string;
+    solution_code: string;
+    difficulty_score: number;
+    test_cases: TestCase[];
     }
 
     interface Window {
         open_ai_client: OpenAI;
+        database: Database;
         
         this_user_id: string;
         
@@ -29,5 +46,3 @@ declare global {
         difficulty: number;
     }
 }
-
-export {}
