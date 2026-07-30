@@ -1,8 +1,9 @@
-import { createMemo, createSignal, For, Match, onCleanup, Switch } from "solid-js";
-import { child, update } from "firebase/database";
+import { createEffect, createMemo, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js";
+import { child, runTransaction, update } from "firebase/database";
 import { Screens, set_current_screen } from "..";
 import MatrixRain from "../components/MatrixRain";
 import { players_joined, room_id, room_max_player_count } from "../main";
+import challenge_templates from "../play/challenges.json";
 import loading_gif from "../play/loading.gif";
 import css from "../play/index.css?raw";
 
@@ -10,35 +11,75 @@ const [still_loading, set_still_loading] = createSignal(true);
 const [challenge, set_challenge] = createSignal<Challenge | null>(null);
 const [current_code, set_current_code] = createSignal("");
 const [time_left, set_time_left] = createSignal(0);
+const [match_finished, set_match_finished] = createSignal(false);
 let game_tick_interval: number | undefined;
+let is_starting_game = false;
 
-const problem_filler = Array.from(
-    { length: 8 },
-    () =>
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer consequat, justo sed cursus feugiat, nisl augue tincidunt mauris, vitae volutpat neque arcu at erat. Suspendisse potenti, aliquam viverra lorem non, fermentum vulputate libero."
+const INITIAL_POOL_SIZE = 6;
+const REFILL_BATCH_SIZE = 4;
+const REFILL_THRESHOLD = 3;
+const use_local_challenges = (
+    import.meta.env.VITE_USE_LOCAL_CHALLENGES !== "false"
 );
 
 async function start_game() {
+    if (is_starting_game || window.room_snapshot?.playing_now) return;
+
+    is_starting_game = true;
     set_current_screen(Screens.PLAY_SCREEN);
     set_still_loading(true);
+    set_challenge(null);
+    set_current_code("");
+    set_match_finished(false);
+    stop_game_tick();
 
-    const generated_challenge = await generate_problem();
-    update(window.room_reference, {
-        playing_now: true,
-        start_time: Date.now(),
-        finish_time: Date.now() + 5 * 60 * 1000,
-        challenge: generated_challenge
-    } as Room);
+    try {
+        const challenge_pool = await generate_challenge_batch(0, INITIAL_POOL_SIZE);
+        const start_time = Date.now();
+
+        await update(window.room_reference, {
+            playing_now: true,
+            start_time,
+            finish_time: start_time + 5 * 60 * 1000,
+            challenge_pool,
+            generation_status: "idle"
+        });
+    } finally {
+        is_starting_game = false;
+    }
 }
 
-import lorem_response from "../play/lorem_response.json";
-const use_lorem = true;
-async function generate_problem() {
-    if (use_lorem) {
-        console.warn("using lorem response");
-        return lorem_response;
+function build_local_challenge_batch(start_index: number, count: number) {
+    return Array.from({ length: count }, (_, offset) => {
+        const pool_index = start_index + offset;
+        const template = challenge_templates[
+            pool_index % challenge_templates.length
+        ] as Challenge;
+
+        return {
+            ...template,
+            id: `${template.id}-${pool_index + 1}`,
+            test_cases: template.test_cases.map((test_case) => ({
+                input_args: [...test_case.input_args],
+                expected_output: test_case.expected_output
+            }))
+        };
+    });
+}
+
+async function generate_challenge_batch(start_index: number, count: number) {
+    if (use_local_challenges) {
+        return build_local_challenge_batch(start_index, count);
     }
 
+    const generated_challenges: Challenge[] = [];
+    for (let offset = 0; offset < count; offset++) {
+        generated_challenges.push(await generate_problem(start_index + offset));
+    }
+    return generated_challenges;
+}
+
+async function generate_problem(pool_index: number) {
     const response = await window.open_ai_client.responses.create({
         model: "gpt-5.4-mini",
         instructions: "You are the core engine of a JavaScript debugging game. Your primary task is to generate broken JavaScript code snippets for players to fix, along with automated test cases. RULES AND CONSTRAINTS: 1. Pure JavaScript Only: No HTML, CSS, DOM manipulation, or browser-specific APIs. Stick to core logic, math, array/object manipulation, algorithms, or async/await patterns. 2. Difficulty Scaling (1-100): The user will request a target difficulty. You must generate a challenge matching this scale and evaluate the final difficulty of your generated code. - 1-30 (Beginner): Simple syntax errors, typos, basic math/logic flaws, basic array iterations. - 31-70 (Intermediate): Scope issues, incorrect array methods, loose/strict equality, object mutation, variable shadowing. - 71-100 (Expert): Async/await handling, Promise chains, closure bugs, complex algorithms, prototype issues, or race conditions. 3. Fixable Bugs: Introduce 1 to 3 distinct bugs appropriate for the difficulty level. 4. Code Structure: The generated code MUST be a single function that returns a value, so it can be automatically tested. OUTPUT FORMAT: You must respond STRICTLY with a valid JSON object. Do not wrap the JSON in markdown formatting, and do not include any conversational text.",
@@ -53,6 +94,10 @@ async function generate_problem() {
                         title: {
                             type: "string",
                             description: "The title of the coding challenge."
+                        },
+                        function_name: {
+                            type: "string",
+                            description: "The exact JavaScript function name that the test runner must call."
                         },
                         intended_behavior: {
                             type: "string",
@@ -96,6 +141,7 @@ async function generate_problem() {
                     },
                     required: [
                         "title",
+                        "function_name",
                         "intended_behavior",
                         "broken_code",
                         "solution_code",
@@ -109,16 +155,26 @@ async function generate_problem() {
         input: "Difficulty: " + window.difficulty
     });
 
-    return JSON.parse(response.output_text) as Challenge;
+    const generated_challenge = JSON.parse(response.output_text) as Omit<Challenge, "id">;
+    return {
+        ...generated_challenge,
+        id: `ai-challenge-${pool_index + 1}`
+    };
 }
 
 function update_challenge() {
-    const next_challenge = window.room_snapshot.challenge;
-    if (!next_challenge) return;
+    const player = window.room_snapshot.players?.[window.this_user_id];
+    const challenge_index = player?.challenge_index ?? 0;
+    const next_challenge = window.room_snapshot.challenge_pool?.[challenge_index];
+    if (!player || !next_challenge) return;
 
+    const challenge_changed = challenge()?.id !== next_challenge.id;
     set_challenge(next_challenge);
-    if (still_loading()) set_current_code(next_challenge.broken_code);
+    if (challenge_changed) {
+        set_current_code(player.code || next_challenge.broken_code);
+    }
     set_still_loading(false);
+    update_time_left();
 
     if (game_tick_interval === undefined) {
         game_tick_interval = window.setInterval(game_tick, 1000);
@@ -126,9 +182,164 @@ function update_challenge() {
 }
 
 function game_tick() {
-    update(child(window.room_reference, `players/${window.this_user_id}`), { code: current_code() });
+    update_time_left();
+    if (match_finished()) {
+        stop_game_tick();
+        return;
+    }
 
-    set_time_left(Math.ceil((window.room_snapshot.finish_time - Date.now())/1000))
+    update(child(window.room_reference, `players/${window.this_user_id}`), { code: current_code() });
+}
+
+function update_time_left() {
+    const remaining_seconds = Math.ceil(
+        (window.room_snapshot.finish_time - Date.now()) / 1000
+    );
+    set_time_left(Math.max(0, remaining_seconds));
+    set_match_finished(remaining_seconds <= 0);
+}
+
+function stop_game_tick() {
+    if (game_tick_interval !== undefined) {
+        window.clearInterval(game_tick_interval);
+        game_tick_interval = undefined;
+    }
+}
+
+async function ensure_pool_capacity(next_challenge_index: number) {
+    const pool_reference = child(window.room_reference, "challenge_pool");
+
+    if (!use_local_challenges) {
+        const current_pool = window.room_snapshot.challenge_pool ?? [];
+        const challenges_remaining = current_pool.length - next_challenge_index;
+        if (challenges_remaining > REFILL_THRESHOLD) return current_pool;
+
+        const generation_reference = child(
+            window.room_reference,
+            "generation_status"
+        );
+        const generation_lock = await runTransaction(
+            generation_reference,
+            (status) => status === "generating" ? undefined : "generating"
+        );
+
+        if (!generation_lock.committed) {
+            return current_pool;
+        }
+
+        try {
+            const generated_batch = await generate_challenge_batch(
+                current_pool.length,
+                REFILL_BATCH_SIZE
+            );
+            const pool_transaction = await runTransaction(
+                pool_reference,
+                (stored_pool) => {
+                    const latest_pool = Array.isArray(stored_pool)
+                        ? stored_pool as Challenge[]
+                        : [];
+                    const latest_remaining = (
+                        latest_pool.length - next_challenge_index
+                    );
+
+                    if (latest_remaining > REFILL_THRESHOLD) {
+                        return latest_pool;
+                    }
+
+                    return [...latest_pool, ...generated_batch];
+                }
+            );
+            return (pool_transaction.snapshot.val() ?? []) as Challenge[];
+        } finally {
+            await update(window.room_reference, {
+                generation_status: "idle"
+            });
+        }
+    }
+
+    const transaction = await runTransaction(pool_reference, (stored_pool) => {
+        const current_pool = Array.isArray(stored_pool)
+            ? stored_pool as Challenge[]
+            : [];
+        const challenges_remaining = current_pool.length - next_challenge_index;
+
+        if (challenges_remaining > REFILL_THRESHOLD) {
+            return current_pool;
+        }
+
+        return [
+            ...current_pool,
+            ...build_local_challenge_batch(
+                current_pool.length,
+                REFILL_BATCH_SIZE
+            )
+        ];
+    });
+
+    return (transaction.snapshot.val() ?? []) as Challenge[];
+}
+
+async function advance_player_after_pass(passed_challenge: Challenge) {
+    if (match_finished() || Date.now() >= window.room_snapshot.finish_time) {
+        return { advanced: false, reason: "The match timer has ended." };
+    }
+
+    const snapshot_player = window.room_snapshot.players?.[window.this_user_id];
+    if (!snapshot_player) {
+        return { advanced: false, reason: "Player data is unavailable." };
+    }
+
+    const current_challenge_index = snapshot_player.challenge_index ?? 0;
+    const expected_challenge = window.room_snapshot.challenge_pool?.[
+        current_challenge_index
+    ];
+    if (expected_challenge?.id !== passed_challenge.id) {
+        return {
+            advanced: false,
+            reason: "This challenge was already completed in another update."
+        };
+    }
+
+    const next_challenge_index = current_challenge_index + 1;
+    const updated_pool = await ensure_pool_capacity(next_challenge_index);
+    const next_challenge = updated_pool[next_challenge_index];
+    if (!next_challenge) {
+        return { advanced: false, reason: "The next challenge is still loading." };
+    }
+
+    const player_reference = child(
+        window.room_reference,
+        `players/${window.this_user_id}`
+    );
+    const transaction = await runTransaction(
+        player_reference,
+        (stored_player: Player | null) => {
+            if (!stored_player) return;
+
+            const stored_challenge_index = stored_player.challenge_index ?? 0;
+            if (stored_challenge_index !== current_challenge_index) return;
+
+            return {
+                ...stored_player,
+                challenge_index: next_challenge_index,
+                score: (stored_player.score ?? 0) + 1,
+                last_completed_at: Date.now(),
+                code: next_challenge.broken_code
+            };
+        }
+    );
+
+    if (!transaction.committed) {
+        return {
+            advanced: false,
+            reason: "This challenge was already scored."
+        };
+    }
+
+    return {
+        advanced: true,
+        next_challenge
+    };
 }
 
 function handle_code_key_down(event: KeyboardEvent) {
@@ -190,10 +401,18 @@ type ConsoleEntry = {
     text: string;
 };
 
+type TestResult = {
+    index: number;
+    passed: boolean;
+    actual: string;
+    expected: string;
+    error?: string;
+};
+
 type WorkerOutput =
     | { type: "console"; level: Exclude<ConsoleLevel, "system">; text: string }
     | { type: "clear" }
-    | { type: "done" }
+    | { type: "test_results"; results: TestResult[] }
     | { type: "error"; message: string };
 
 const javascript_keywords = new Set([
@@ -319,7 +538,11 @@ function format_time(seconds: number) {
     return `${minutes}:${String(remaining_seconds).padStart(2, "0")}`;
 }
 
-function create_execution_worker(code: string) {
+function create_execution_worker(code: string, active_challenge: Challenge) {
+    if (!/^[A-Za-z_$][\w$]*$/.test(active_challenge.function_name)) {
+        throw new Error("Challenge has an invalid function name.");
+    }
+
     const worker_source = `
 const formatValue = (value) => {
     if (typeof value === "string") return value;
@@ -346,12 +569,93 @@ self.console.warn = (...values) => send("warn", values);
 self.console.error = (...values) => send("error", values);
 self.console.clear = () => self.postMessage({ type: "clear" });
 const userCode = ${JSON.stringify(code)};
+const functionName = ${JSON.stringify(active_challenge.function_name)};
+const testCases = ${JSON.stringify(active_challenge.test_cases)};
+
+const deepEqual = (left, right) => {
+    if (Object.is(left, right)) return true;
+    if (Array.isArray(left) && Array.isArray(right)) {
+        return left.length === right.length
+            && left.every((value, index) => deepEqual(value, right[index]));
+    }
+    if (
+        left !== null
+        && right !== null
+        && typeof left === "object"
+        && typeof right === "object"
+    ) {
+        const leftKeys = Object.keys(left);
+        const rightKeys = Object.keys(right);
+        return leftKeys.length === rightKeys.length
+            && leftKeys.every(
+                (key) => Object.prototype.hasOwnProperty.call(right, key)
+                    && deepEqual(left[key], right[key])
+            );
+    }
+    return false;
+};
+
+const parseTestValue = (encodedValue, label) => {
+    try {
+        return JSON.parse(encodedValue);
+    } catch {
+        throw new Error(label + " is not valid JSON: " + encodedValue);
+    }
+};
+
 try {
-    const execute = new Function(
-        "return (async () => {\\n" + userCode + "\\n})()"
+    const createSolution = new Function(
+        userCode
+        + "\\n; return typeof "
+        + functionName
+        + " === \\"function\\" ? "
+        + functionName
+        + " : undefined;"
     );
-    Promise.resolve(execute())
-        .then(() => self.postMessage({ type: "done" }))
+    const solution = createSolution();
+    if (typeof solution !== "function") {
+        throw new Error(
+            "Expected a function named "
+            + functionName
+            + ". Keep that function name in your solution."
+        );
+    }
+
+    Promise.resolve().then(async () => {
+        const results = [];
+        for (let index = 0; index < testCases.length; index++) {
+            const testCase = testCases[index];
+            let expected;
+            try {
+                const inputArgs = testCase.input_args.map(
+                    (value, argumentIndex) => parseTestValue(
+                        value,
+                        "Case " + (index + 1) + " argument " + (argumentIndex + 1)
+                    )
+                );
+                expected = parseTestValue(
+                    testCase.expected_output,
+                    "Case " + (index + 1) + " expected output"
+                );
+                const actual = await solution(...inputArgs);
+                results.push({
+                    index,
+                    passed: deepEqual(actual, expected),
+                    actual: formatValue(actual),
+                    expected: formatValue(expected)
+                });
+            } catch (error) {
+                results.push({
+                    index,
+                    passed: false,
+                    actual: "Error",
+                    expected: formatValue(expected),
+                    error: error instanceof Error ? error.message : String(error)
+                });
+            }
+        }
+        self.postMessage({ type: "test_results", results });
+    })
         .catch((error) => self.postMessage({
             type: "error",
             message: error instanceof Error
@@ -376,6 +680,8 @@ try {
 }
 
 export default function PlayScreen() {
+    onCleanup(stop_game_tick);
+
     return (
         <main class="play-screen">
             <style>{css}</style>
@@ -397,19 +703,26 @@ export default function PlayScreen() {
 function Showtime() {
     const [editor_split, set_editor_split] = createSignal(66);
     const [is_resizing, set_is_resizing] = createSignal(false);
+    const [is_advancing, set_is_advancing] = createSignal(false);
     const [active_output, set_active_output] = createSignal<"testcase" | "console">("testcase");
     const [active_test_case, set_active_test_case] = createSignal(0);
     const [inline_error, set_inline_error] = createSignal<InlineError | null>(null);
     const [console_entries, set_console_entries] = createSignal<ConsoleEntry[]>([]);
     const [console_status, set_console_status] = createSignal("Ready");
+    const [test_results, set_test_results] = createSignal<TestResult[]>([]);
     let syntax_layer!: HTMLPreElement;
     let editor_gutter!: HTMLDivElement;
     let console_output!: HTMLDivElement;
     let active_worker: Worker | undefined;
     let execution_timeout: number | undefined;
+    let previous_challenge_id = challenge()?.id;
 
     const other_players = createMemo(() =>
         players_joined().filter(([id]) => id !== window.this_user_id)
+    );
+    const local_player = createMemo(
+        () => players_joined()
+            .find(([id]) => id === window.this_user_id)?.[1]
     );
     const player_slots = createMemo(() => {
         const players = other_players();
@@ -422,7 +735,23 @@ function Showtime() {
     const selected_test_case = createMemo(
         () => test_cases()[active_test_case()] ?? test_cases()[0] ?? null
     );
+    const selected_test_result = createMemo(
+        () => test_results()[active_test_case()] ?? null
+    );
     const code_lines = createMemo(() => current_code().split("\n"));
+
+    createEffect(() => {
+        const current_challenge_id = challenge()?.id;
+        if (!current_challenge_id || current_challenge_id === previous_challenge_id) return;
+
+        previous_challenge_id = current_challenge_id;
+        set_active_test_case(0);
+        set_test_results([]);
+        set_inline_error(null);
+        set_console_entries([]);
+        set_console_status("Ready");
+        set_is_advancing(false);
+    });
 
     const resize_editor = (event: PointerEvent) => {
         if (!is_resizing()) return;
@@ -464,14 +793,18 @@ function Showtime() {
     };
 
     const run_code = () => {
+        const active_challenge = challenge();
+        if (!active_challenge || is_advancing() || match_finished()) return;
+
         stop_execution();
         set_active_output("console");
         set_inline_error(null);
+        set_test_results([]);
         set_console_entries([{ level: "system", text: "Running solution.js" }]);
         set_console_status("Running");
 
         try {
-            active_worker = create_execution_worker(current_code());
+            active_worker = create_execution_worker(current_code(), active_challenge);
         } catch (error) {
             set_console_status("Error");
             append_console({
@@ -481,7 +814,7 @@ function Showtime() {
             return;
         }
 
-        active_worker.onmessage = (event: MessageEvent<WorkerOutput>) => {
+        active_worker.onmessage = async (event: MessageEvent<WorkerOutput>) => {
             const output = event.data;
 
             if (output.type === "console") {
@@ -502,21 +835,73 @@ function Showtime() {
                 return;
             }
 
-            set_console_status("Done");
-            append_console({ level: "system", text: "Process finished with exit code 0" });
             stop_execution();
+            set_test_results(output.results);
+            set_active_output("testcase");
+
+            const passed_count = output.results.filter((result) => result.passed).length;
+            const all_tests_passed = (
+                output.results.length > 0
+                && passed_count === output.results.length
+            );
+
+            if (!all_tests_passed) {
+                set_console_status(`${passed_count}/${output.results.length} passed`);
+                append_console({
+                    level: "system",
+                    text: `${passed_count} of ${output.results.length} tests passed`
+                });
+                return;
+            }
+
+            set_is_advancing(true);
+            set_console_status("All tests passed");
+            append_console({
+                level: "system",
+                text: "All tests passed. Scoring challenge..."
+            });
+
+            try {
+                const advancement = await advance_player_after_pass(active_challenge);
+                if (!advancement.advanced) {
+                    set_console_status("Not scored");
+                    append_console({
+                        level: "warn",
+                        text: advancement.reason ?? "Challenge could not be scored."
+                    });
+                    return;
+                }
+
+                set_console_status("+1 point");
+                append_console({
+                    level: "system",
+                    text: "Challenge complete: +1 point"
+                });
+            } catch (error) {
+                set_console_status("Sync error");
+                append_console({
+                    level: "error",
+                    text: error instanceof Error
+                        ? error.message
+                        : "Unable to load the next challenge."
+                });
+            } finally {
+                set_is_advancing(false);
+            }
         };
 
         active_worker.onerror = (event) => {
             event.preventDefault();
             set_inline_error(locate_inline_error(current_code()) ?? { line: 0, column: 0 });
             set_console_status("Error");
+            set_is_advancing(false);
             append_console({ level: "error", text: event.message || "Execution failed" });
             stop_execution();
         };
 
         execution_timeout = window.setTimeout(() => {
             set_console_status("Stopped");
+            set_is_advancing(false);
             append_console({ level: "error", text: "Execution stopped after 2.5 seconds" });
             stop_execution();
         }, 2500);
@@ -531,14 +916,24 @@ function Showtime() {
                     <span>Timer</span>
                     <strong>{format_time(time_left())}</strong>
                 </header>
+                <output
+                    class="score-tab"
+                    aria-label={`Your score: ${local_player()?.score ?? 0}`}
+                    title="Your score"
+                >
+                    {local_player()?.score ?? 0}
+                </output>
 
                 <div class="problem-content">
-                    <p>Challenge {challenge()?.difficulty_score ?? "--"}</p>
+                    <div class="challenge-status-row">
+                        <p>
+                            Challenge {(local_player()?.challenge_index ?? 0) + 1}
+                            {" · "}
+                            Difficulty {challenge()?.difficulty_score ?? "--"}
+                        </p>
+                    </div>
                     <h1 id="problem-title">{challenge()?.title ?? "Debug the code"}</h1>
                     <p>{challenge()?.intended_behavior ?? "Challenge details unavailable."}</p>
-                    <For each={problem_filler}>
-                        {(paragraph) => <p>{paragraph}</p>}
-                    </For>
 
                     <section class="test-case" aria-label="Example test case">
                         <span>Input</span>
@@ -573,8 +968,16 @@ function Showtime() {
                             />
                             {inline_error() ? "1 problem" : "No problems"}
                         </span>
-                        <button type="button" onClick={run_code}>
-                            Run code
+                        <button
+                            type="button"
+                            onClick={run_code}
+                            disabled={is_advancing() || match_finished()}
+                        >
+                            {match_finished()
+                                ? "Time expired"
+                                : is_advancing()
+                                    ? "Loading next..."
+                                    : "Run tests"}
                         </button>
                     </div>
                 </header>
@@ -705,7 +1108,11 @@ function Showtime() {
                                                 type="button"
                                                 role="tab"
                                                 aria-selected={active_test_case() === index()}
-                                                classList={{ "is-active": active_test_case() === index() }}
+                                                classList={{
+                                                    "is-active": active_test_case() === index(),
+                                                    "has-passed": test_results()[index()]?.passed === true,
+                                                    "has-failed": test_results()[index()]?.passed === false
+                                                }}
                                                 onClick={() => set_active_test_case(index())}
                                             >
                                                 Case {index() + 1}
@@ -718,6 +1125,20 @@ function Showtime() {
                                     <code>{selected_test_case()?.input_args.join(", ") ?? "Unavailable"}</code>
                                     <span>Expected</span>
                                     <code>{selected_test_case()?.expected_output ?? "Unavailable"}</code>
+                                    <Show when={selected_test_result()}>
+                                        {(result) => (
+                                            <>
+                                                <span>Actual</span>
+                                                <code>{result().actual}</code>
+                                                <span>Status</span>
+                                                <code class={result().passed ? "test-passed" : "test-failed"}>
+                                                    {result().passed
+                                                        ? "Passed"
+                                                        : result().error ?? "Failed"}
+                                                </code>
+                                            </>
+                                        )}
+                                    </Show>
                                 </div>
                             </div>
                         </Match>
@@ -799,7 +1220,9 @@ function PlayerCodeCard(props: {
         <article class="player-code-card">
             <header>
                 <span>{player.name}</span>
-                <i>{player.ready ? "Debugging" : "Connecting"}</i>
+                <i>
+                    {player.score ?? 0} pts · Challenge {(player.challenge_index ?? 0) + 1}
+                </i>
             </header>
             <pre>{player.code || "Waiting for code..."}</pre>
         </article>

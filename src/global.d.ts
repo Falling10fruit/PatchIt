@@ -6,6 +6,9 @@ declare global {
         name: string;
         ready: boolean;
         code: string;
+        challenge_index: number;
+        score: number;
+        last_completed_at: number;
     }
 
     interface Room {
@@ -18,7 +21,8 @@ declare global {
         playing_now: boolean;
         start_time: number;
         finish_time: number;
-        challenge: Challenge
+        challenge_pool: Challenge[];
+        generation_status: "idle" | "generating";
     }
 
     interface TestCase {
@@ -27,12 +31,14 @@ declare global {
     }
 
     interface Challenge {
-    title: string;
-    intended_behavior: string;
-    broken_code: string;
-    solution_code: string;
-    difficulty_score: number;
-    test_cases: TestCase[];
+        id: string;
+        function_name: string;
+        title: string;
+        intended_behavior: string;
+        broken_code: string;
+        solution_code: string;
+        difficulty_score: number;
+        test_cases: TestCase[];
     }
 
     interface Window {

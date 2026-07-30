@@ -3,11 +3,14 @@ import { render } from "solid-js/web";
 
 import { initializeApp } from "firebase/app"
 import { getDatabase, ref, set, get, onValue, DatabaseReference, child, update, increment, off, remove } from "firebase/database"
-import { createSignal, Signal, SignalOptions } from "solid-js";
+import { createSignal } from "solid-js";
 import { OpenAI } from "openai";
 import { start_game, update_challenge } from "./play/index.tsx";
 
-window.open_ai_client = new OpenAI({ apiKey: import.meta.env.VITE_API_AI_KEY, dangerouslyAllowBrowser: true });
+window.open_ai_client = new OpenAI({
+    apiKey: import.meta.env.VITE_API_AI_KEY,
+    dangerouslyAllowBrowser: true
+});
 const app = initializeApp({
     apiKey: "AIzaSyB-_eEMOa9D_Q1bIREy8YqLFw1ve0BLUnE",
     authDomain: "patchit-8af4d.firebaseapp.com",
@@ -50,10 +53,16 @@ function create_room () {
         playing_now: false,
         start_time: 0,
         finish_time: 0,
+        challenge_pool: [],
+        generation_status: "idle",
     } as Room);
     set_players_joined([ [window.this_user_id, {
         name: this_player_name(),
-        ready: false, code: ""
+        ready: false,
+        code: "",
+        challenge_index: 0,
+        score: 0,
+        last_completed_at: 0
     }] ]);
 
     set_room_id(new_room_code);
@@ -102,36 +111,59 @@ function enter_lobby (reference: DatabaseReference) {
         ["players/" + window.this_user_id]: {
             name: this_player_name(),
             ready: false,
-            code: ""
+            code: "",
+            challenge_index: 0,
+            score: 0,
+            last_completed_at: 0
         }
     });
     set_current_screen(Screens.LOBBY_SCREEN);
     onValue(window.room_reference, (snapshot) => { update_room(snapshot.val()); });
 }
 
-function leave_room() {
+async function leave_room() {
+    const room_reference = window.room_reference;
+    const room_snapshot = window.room_snapshot;
+
     set_current_screen(Screens.WELCOME_SCREEN);
-    window.room_snapshot.host == "";
+    off(room_reference);
 
-    if (window.room_snapshot.host == window.this_user_id) {
-        if (window.room_snapshot.current_player_count == 1) {
-            remove(window.room_reference);
+    if (room_snapshot.host == window.this_user_id) {
+        if (room_snapshot.current_player_count <= 1) {
+            await remove(room_reference);
         } else {
-            update(window.room_reference, { current_player_count: increment(-1), ["players/" + window.this_user_id]: null });
+            const next_host = Object.keys(room_snapshot.players)
+                .find((id) => id != window.this_user_id);
 
-            for (const id in window.room_snapshot.players) {
-                if (id != window.this_user_id) {
-                    update(window.room_reference, { host: id });
-                }
+            if (next_host) {
+                await update(room_reference, {
+                    current_player_count: increment(-1),
+                    ["players/" + window.this_user_id]: null,
+                    host: next_host
+                });
+            } else {
+                await remove(room_reference);
             }
         }
-    };
-    off(window.room_reference);
+    } else {
+        await update(room_reference, {
+            current_player_count: increment(-1),
+            ["players/" + window.this_user_id]: null
+        });
+    }
     
     set_room_id("");
+    set_players_joined([]);
 }
 
-async function update_room(data: Room) {
+async function update_room(data: Room | null) {
+    if (!data) {
+        set_current_screen(Screens.WELCOME_SCREEN);
+        set_room_id("");
+        set_players_joined([]);
+        return;
+    }
+
     window.room_snapshot = data;
     set_room_max_player_count(Math.max(1, data.max_player_count ?? new_room_player_count()));
     set_players_joined(
@@ -139,13 +171,13 @@ async function update_room(data: Room) {
     );
 
     if (current_screen() == Screens.LOBBY_SCREEN) {
-        if (data.host == window.this_user_id) {
+        if (data.playing_now) {
+            set_current_screen(Screens.PLAY_SCREEN);
+            update_challenge();
+        } else if (data.host == window.this_user_id) {
             let all_ready = true;
             for (const [user_id, {ready}] of Object.entries(data.players ?? {})) { all_ready &&= ready; }
             if (all_ready) start_game();
-        } else if (data.playing_now) {
-            set_current_screen(Screens.PLAY_SCREEN);
-            update_challenge();
         };
     } else if (current_screen() == Screens.PLAY_SCREEN) {
         update_challenge();
