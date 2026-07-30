@@ -6,6 +6,9 @@ import css from "./index.css?raw";
 export default function Gameover() {
     const [ready_update_pending, set_ready_update_pending] = createSignal(true);
     const [status_message, set_status_message] = createSignal("");
+    const [active_results_tab, set_active_results_tab] = createSignal<
+        "leaderboard" | "analysis"
+    >("leaderboard");
     const leaderboard = createMemo(() =>
         [...players_joined()].sort((left, right) => {
             const score_difference = (right[1].score ?? 0) - (left[1].score ?? 0);
@@ -80,52 +83,116 @@ export default function Gameover() {
                     <section class="leaderboard-panel" aria-labelledby="leaderboard-title">
                         <header>
                             <div>
-                                <p>Final standings</p>
-                                <h2 id="leaderboard-title">Leaderboard</h2>
+                                <p>Match review</p>
+                                <h2 id="leaderboard-title">
+                                    {active_results_tab() === "leaderboard"
+                                        ? "Leaderboard"
+                                        : "AI Analysis"}
+                                </h2>
                             </div>
                             <span>{connected_count()} players</span>
                         </header>
 
+                        <nav class="results-tabs" role="tablist" aria-label="Match results">
+                            <button
+                                id="leaderboard-tab"
+                                type="button"
+                                role="tab"
+                                aria-selected={active_results_tab() === "leaderboard"}
+                                aria-controls="leaderboard-results"
+                                classList={{
+                                    "is-active": active_results_tab() === "leaderboard"
+                                }}
+                                onClick={() => set_active_results_tab("leaderboard")}
+                            >
+                                Leaderboard
+                            </button>
+                            <button
+                                id="analysis-tab"
+                                type="button"
+                                role="tab"
+                                aria-selected={active_results_tab() === "analysis"}
+                                aria-controls="analysis-results"
+                                classList={{
+                                    "is-active": active_results_tab() === "analysis"
+                                }}
+                                onClick={() => set_active_results_tab("analysis")}
+                            >
+                                AI Analysis
+                            </button>
+                        </nav>
+
                         <Show
-                            when={winner()}
-                            fallback={<p class="empty-results">No scores were recorded.</p>}
+                            when={active_results_tab() === "leaderboard"}
+                            fallback={
+                                <section
+                                    id="analysis-results"
+                                    class="gameover-analysis"
+                                    role="tabpanel"
+                                    aria-labelledby="analysis-tab"
+                                >
+                                    <p>Post-match review</p>
+                                    <h3>AI mistake analysis is coming soon</h3>
+                                    <span>
+                                        This tab will locate likely mistakes in your failed
+                                        solutions and explain why they produced the wrong result.
+                                    </span>
+                                </section>
+                            }
                         >
-                            <section class="winner-card" aria-label="Match winner">
-                                <span class="winner-label">Top debugger</span>
-                                <strong>{winner()?.name}</strong>
-                                <span>{winner()?.score ?? 0} points</span>
+                            <section
+                                id="leaderboard-results"
+                                class="leaderboard-results"
+                                role="tabpanel"
+                                aria-labelledby="leaderboard-tab"
+                            >
+                                <Show
+                                    when={winner()}
+                                    fallback={
+                                        <p class="empty-results">No scores were recorded.</p>
+                                    }
+                                >
+                                    <section class="winner-card" aria-label="Match winner">
+                                        <span class="winner-label">Top debugger</span>
+                                        <strong>{winner()?.name}</strong>
+                                        <span>{winner()?.score ?? 0} points</span>
+                                    </section>
+                                </Show>
+
+                                <ol class="leaderboard-list">
+                                    <For each={leaderboard()}>
+                                        {([id, player], index) => (
+                                            <li
+                                                classList={{
+                                                    "is-local-player":
+                                                        id === window.this_user_id,
+                                                    "is-winner": index() === 0
+                                                }}
+                                            >
+                                                <span class="player-rank">
+                                                    {String(index() + 1).padStart(2, "0")}
+                                                </span>
+                                                <span class="result-avatar">
+                                                    {player.name.slice(0, 1).toUpperCase()}
+                                                </span>
+                                                <span class="result-player">
+                                                    <strong>{player.name}</strong>
+                                                    <small>
+                                                        {id === window.this_user_id
+                                                            ? "You"
+                                                            : "Debugger"}
+                                                    </small>
+                                                </span>
+                                                <span class="result-score">
+                                                    <strong>{player.score ?? 0}</strong>
+                                                    <small>points</small>
+                                                </span>
+                                            </li>
+                                        )}
+                                    </For>
+                                </ol>
                             </section>
                         </Show>
-
-                        <ol class="leaderboard-list">
-                            <For each={leaderboard()}>
-                                {([id, player], index) => (
-                                    <li
-                                        classList={{
-                                            "is-local-player": id === window.this_user_id,
-                                            "is-winner": index() === 0
-                                        }}
-                                    >
-                                        <span class="player-rank">
-                                            {String(index() + 1).padStart(2, "0")}
-                                        </span>
-                                        <span class="result-avatar">
-                                            {player.name.slice(0, 1).toUpperCase()}
-                                        </span>
-                                        <span class="result-player">
-                                            <strong>{player.name}</strong>
-                                            <small>
-                                                {id === window.this_user_id ? "You" : "Debugger"}
-                                            </small>
-                                        </span>
-                                        <span class="result-score">
-                                            <strong>{player.score ?? 0}</strong>
-                                            <small>points</small>
-                                        </span>
-                                    </li>
-                                )}
-                            </For>
-                        </ol>
                     </section>
 
                     <aside class="rematch-panel" aria-labelledby="rematch-title">
