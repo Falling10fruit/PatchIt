@@ -42,7 +42,7 @@ function create_room () {
         host: window.this_user_id,
 
         max_player_count: new_room_player_count(),
-        current_player_count: 1,
+        current_player_count: 0,
         players: {},
 
         playing_now: false,
@@ -63,7 +63,8 @@ async function join_room(code: string, set_log_message: any) {
     const current_snap = await get(reference);
     const does_exist = current_snap.exists();
     if (does_exist) {
-        update_room(current_snap.val());
+        window.room_snapshot = current_snap.val();
+        console.log(window.room_snapshot.current_player_count);
         if (window.room_snapshot.max_player_count == window.room_snapshot.current_player_count) {
             set_log_message("room full! max " + window.room_snapshot.max_player_count + " players");
             return;
@@ -106,12 +107,22 @@ function enter_lobby (reference: DatabaseReference) {
     onValue(window.room_reference, (snapshot) => { update_room(snapshot.val()); });
 }
 
-function leave_room() {
+async function leave_room() {
     set_current_screen(Screens.WELCOME_SCREEN);
     window.room_snapshot.host == "";
 
-    update(window.room_reference, { current_player_count: increment(-1), ["players/" + window.this_user_id]: null })
-    if (window.room_snapshot.host == window.this_user_id) remove(window.room_reference);
+    await update(window.room_reference, { current_player_count: increment(-1), ["players/" + window.this_user_id]: null })
+    if (window.room_snapshot.host == window.this_user_id) {
+        if (window.room_snapshot.current_player_count == 1) {
+            remove(window.room_reference);
+        } else {
+            for (const id in Object.entries(window.room_snapshot.players)) {
+                if (id != window.this_user_id) {
+                    update(window.room_reference, { host: id });
+                }
+            }
+        }
+    };
     off(window.room_reference);
     
     set_room_id("");
@@ -127,7 +138,6 @@ async function update_room(data: Room) {
             for (const [user_id, {ready}] of Object.entries(data.players)) { all_ready &&= ready; }
             if (all_ready) start_game();
         } else if (data.playing_now) {
-            console.log("hello?");
             set_current_screen(Screens.PLAY_SCREEN);
             update_challenge();
         };

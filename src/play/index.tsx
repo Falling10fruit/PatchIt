@@ -22,7 +22,14 @@ async function start_game() {
     } as Room);
 }
 
+import lorem_response from "../play/lorem_response.json";
+const use_lorem = true;
 async function generate_problem() {
+    if (use_lorem) {
+        console.warn("using lorem response");
+        return lorem_response;
+    }
+
     const response = await window.open_ai_client.responses.create({
         model: "gpt-5.4-mini",
         instructions: 'You are the core engine of a JavaScript debugging game. Your primary task is to generate broken JavaScript code snippets for players to fix, along with automated test cases. RULES AND CONSTRAINTS: 1. Pure JavaScript Only: No HTML, CSS, DOM manipulation, or browser-specific APIs. Stick to core logic, math, array/object manipulation, algorithms, or async/await patterns. 2. Difficulty Scaling (1-100): The user will request a target difficulty. You must generate a challenge matching this scale and evaluate the final difficulty of your generated code. - 1-30 (Beginner): Simple syntax errors, typos, basic math/logic flaws, basic array iterations. - 31-70 (Intermediate): Scope issues, incorrect array methods, loose/strict equality, object mutation, variable shadowing. - 71-100 (Expert): Async/await handling, Promise chains, closure bugs, complex algorithms, prototype issues, or race conditions. 3. Fixable Bugs: Introduce 1 to 3 distinct bugs appropriate for the difficulty level. 4. Code Structure: The generated code MUST be a single function that returns a value, so it can be automatically tested. OUTPUT FORMAT: You must respond STRICTLY with a valid JSON object. Do not wrap the JSON in markdown formatting (like ```json), and do not include any conversational text.',
@@ -92,19 +99,16 @@ async function generate_problem() {
             }
         } },
         input: "Difficulty: " + window.difficulty,
-    });
-
-    return JSON.parse(response.output_text) as Challenge;
+    }); return JSON.parse(response.output_text) as Challenge;
 }
 
 function update_challenge() {
     set_problem_description(window.room_snapshot.challenge.intended_behavior);
     set_current_code(window.room_snapshot.challenge.broken_code);
-    console.log(window.room_snapshot.challenge.broken_code);
     set_still_loading(false);
 
     setInterval(read_code, 1000);
-} function read_code() { update(child(window.room_reference, `players/${window.this_user_id}/code`), current_code); }
+} function read_code() { update(child(window.room_reference, `players/${window.this_user_id}`), { code: current_code() }); }
 
 export default function PlayScreen () {
     return ( <main>
@@ -120,7 +124,7 @@ export default function PlayScreen () {
 function Showtime() {
     return (<section id="main_coding_view">
         <div id="problem">{ problem_description() }</div>
-        <textarea id="coding_area" value={ current_code() } oninput={
+        <textarea id="coding_area" oninput={
             (e) => { set_current_code(e.target.value); }
         } />
         

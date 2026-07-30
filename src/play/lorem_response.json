@@ -1,0 +1,27 @@
+{
+  "title": "Filter the Evens",
+  "intended_behavior": "Write a function that takes an array of numbers and returns a new array containing only the even numbers. Check how the condition inside the filter method is evaluating the numbers.",
+  "broken_code": "function filterEvens(arr) {\n  return arr.filter(num => num % 2 = 0);\n}",
+  "solution_code": "function filterEvens(arr) {\n  return arr.filter(num => num % 2 === 0);\n}",
+  "difficulty_score": 25,
+  "test_cases": [
+    {
+      "input_args": [
+        "[1, 2, 3, 4, 5]"
+      ],
+      "expected_output": "[2, 4]"
+    },
+    {
+      "input_args": [
+        "[11, 13, 15]"
+      ],
+      "expected_output": "[]"
+    },
+    {
+      "input_args": [
+        "[10, -2, 7, 8]"
+      ],
+      "expected_output": "[10, -2, 8]"
+    }
+  ]
+}
