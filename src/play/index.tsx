@@ -131,6 +131,46 @@ function game_tick() {
     set_time_left(Math.ceil((window.room_snapshot.finish_time - Date.now())/1000))
 }
 
+function handle_code_key_down(event: KeyboardEvent) {
+    if (event.key !== "Tab") return;
+
+    event.preventDefault();
+    const editor = event.currentTarget as HTMLTextAreaElement;
+    const code = current_code();
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const indentation = "    ";
+
+    if (start === end) {
+        set_current_code(
+            code.slice(0, start) + indentation + code.slice(end)
+        );
+        queueMicrotask(() => {
+            editor.selectionStart = start + indentation.length;
+            editor.selectionEnd = start + indentation.length;
+        });
+        return;
+    }
+
+    const line_start = code.lastIndexOf("\n", start - 1) + 1;
+    const line_end_index = code.indexOf("\n", end);
+    const line_end = line_end_index === -1 ? code.length : line_end_index;
+    const selected_lines = code.slice(line_start, line_end);
+    const line_count = selected_lines.split("\n").length;
+    const indented_lines = indentation + selected_lines.replace(
+        /\n/g,
+        `\n${indentation}`
+    );
+
+    set_current_code(
+        code.slice(0, line_start) + indented_lines + code.slice(line_end)
+    );
+    queueMicrotask(() => {
+        editor.selectionStart = start + indentation.length;
+        editor.selectionEnd = end + indentation.length * line_count;
+    });
+}
+
 export default function PlayScreen() {
     return (
         <main class="play-screen">
@@ -200,6 +240,7 @@ function Showtime() {
                         wrap="off"
                         value={current_code()}
                         onInput={(event) => set_current_code(event.currentTarget.value)}
+                        onKeyDown={handle_code_key_down}
                     />
                 </section>
 

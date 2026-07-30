@@ -7,10 +7,13 @@
 
 .play-screen {
     --purple: var(--patchit-purple);
-    --purple-outline: var(--patchit-purple-outline);
-    --panel-surface: var(--patchit-purple-panel);
+    --purple-outline: rgba(86, 11, 173, 0.62);
+    --panel-surface: rgba(31, 31, 31, 0.92);
+    --panel-raised: rgba(43, 43, 43, 0.94);
+    --panel-deep: rgba(24, 24, 24, 0.94);
+    --neutral-border: rgba(255, 255, 255, 0.12);
     --cyan: var(--patchit-cyan);
-    --ink: rgba(255, 255, 255, 0.82);
+    --ink: rgba(245, 245, 245, 0.88);
     position: relative;
     isolation: isolate;
     display: grid;
@@ -41,8 +44,8 @@
 
 .play-screen .matrix-shade {
     z-index: -1;
-    background: rgba(37, 37, 37, 0.78);
-    opacity: 0.68;
+    background: rgba(20, 20, 20, 0.82);
+    opacity: 0.72;
 }
 
 .loading-view {
@@ -52,7 +55,7 @@
     border: clamp(0.35rem, 0.55vw, 0.65rem) solid var(--purple-outline);
     padding: clamp(1.5rem, 4vw, 3rem);
     background: var(--panel-surface);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(4px);
 }
 
 .loading-view h1 {
@@ -89,8 +92,8 @@
     overflow: hidden;
     background: var(--panel-surface);
     background-clip: padding-box;
-    box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.28);
-    backdrop-filter: blur(2px);
+    box-shadow: 0 1rem 2.5rem rgba(0, 0, 0, 0.34);
+    backdrop-filter: blur(4px);
 }
 
 .problem-panel {
@@ -122,12 +125,12 @@
     grid-template-columns: 1fr auto;
     align-items: center;
     height: var(--timer-height);
-    border-bottom: 1px solid rgba(86, 11, 173, 0.34);
+    border-bottom: 1px solid var(--neutral-border);
     padding: 0.55rem 1rem;
-    color: rgba(255, 255, 255, 0.88);
-    background: rgba(18, 10, 27, 0.58);
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(46, 46, 46, 0.78);
     box-shadow: none;
-    backdrop-filter: blur(12px) saturate(115%);
+    backdrop-filter: blur(12px);
     font-size: clamp(0.78rem, 1vw, 1rem);
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -148,8 +151,8 @@
         clamp(1.25rem, 2.4vw, 2.5rem)
         clamp(1.25rem, 2.4vw, 2.5rem);
     overflow-y: auto;
-    background: rgba(0, 0, 0, 0.14);
-    scrollbar-color: var(--cyan) rgba(0, 0, 0, 0.32);
+    background: rgba(26, 26, 26, 0.72);
+    scrollbar-color: var(--cyan) rgba(255, 255, 255, 0.08);
     scrollbar-width: thin;
 }
 
@@ -171,7 +174,7 @@
 
 .problem-content > p {
     margin: 0;
-    color: rgba(255, 255, 255, 0.66);
+    color: rgba(239, 239, 239, 0.72);
     font-size: clamp(0.82rem, 1vw, 1rem);
     line-height: 1.65;
 }
@@ -187,12 +190,12 @@
     margin-top: clamp(1.5rem, 3vh, 2.5rem);
     border-left: 3px solid var(--cyan);
     padding: 0.9rem 1rem;
-    background: rgba(0, 0, 0, 0.24);
+    background: rgba(45, 45, 45, 0.86);
     font-size: clamp(0.7rem, 0.9vw, 0.86rem);
 }
 
 .test-case span {
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.5);
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -224,9 +227,9 @@
     justify-content: space-between;
     gap: 1rem;
     min-height: 3rem;
-    border-bottom: 2px solid rgba(90, 168, 191, 0.42);
+    border-bottom: 1px solid var(--neutral-border);
     padding: 0.55rem 1rem;
-    background: rgba(0, 0, 0, 0.24);
+    background: var(--panel-raised);
 }
 
 .panel-header h2 {
@@ -238,10 +241,10 @@
 }
 
 .panel-header button {
-    border: 1px solid rgba(90, 168, 191, 0.62);
+    border: 1px solid rgba(90, 168, 191, 0.7);
     padding: 0.5rem 0.75rem;
     color: var(--cyan);
-    background: rgba(90, 168, 191, 0.08);
+    background: rgba(90, 168, 191, 0.1);
     font: 700 clamp(0.62rem, 0.75vw, 0.72rem)/1 "Intel One Mono", monospace;
     text-transform: uppercase;
     cursor: pointer;
@@ -271,11 +274,11 @@
     border-radius: 0;
     padding: clamp(1rem, 1.6vw, 1.5rem);
     outline: none;
-    color: rgba(255, 255, 255, 0.84);
+    color: rgba(248, 248, 242, 0.88);
     caret-color: var(--cyan);
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--panel-deep);
     font: 400 clamp(0.76rem, 0.95vw, 0.94rem)/1.65 "Intel One Mono", monospace;
-    scrollbar-color: var(--cyan) rgba(0, 0, 0, 0.32);
+    scrollbar-color: var(--cyan) rgba(255, 255, 255, 0.08);
     scrollbar-width: thin;
     tab-size: 4;
     white-space: pre;
@@ -291,8 +294,8 @@
     margin: 0;
     padding: 1rem 1.25rem;
     overflow: auto;
-    color: rgba(255, 255, 255, 0.58);
-    background: rgba(0, 0, 0, 0.34);
+    color: rgba(235, 235, 235, 0.62);
+    background: var(--panel-deep);
     font: 400 clamp(0.7rem, 0.85vw, 0.82rem)/1.55 "Intel One Mono", monospace;
     white-space: pre-wrap;
 }
@@ -318,8 +321,8 @@
     min-height: 3rem;
     border: clamp(0.35rem, 0.55vw, 0.65rem) solid var(--purple-outline);
     padding: 0.55rem 0.8rem;
-    background: var(--panel-surface);
-    backdrop-filter: blur(2px);
+    background: var(--panel-raised);
+    backdrop-filter: blur(4px);
 }
 
 .players-code-header span {
@@ -348,7 +351,7 @@
     height: 100%;
     padding-right: 0.25rem;
     overflow-y: auto;
-    scrollbar-color: var(--cyan) rgba(0, 0, 0, 0.32);
+    scrollbar-color: var(--cyan) rgba(255, 255, 255, 0.08);
     scrollbar-width: thin;
 }
 
@@ -364,9 +367,9 @@
     justify-content: space-between;
     gap: 0.5rem;
     min-height: 2.5rem;
-    border-bottom: 1px solid rgba(90, 168, 191, 0.34);
+    border-bottom: 1px solid var(--neutral-border);
     padding: 0.55rem 0.7rem;
-    background: rgba(0, 0, 0, 0.26);
+    background: var(--panel-raised);
 }
 
 .player-code-card header span {
@@ -392,8 +395,8 @@
     margin: 0;
     padding: 0.75rem;
     overflow: hidden;
-    color: rgba(255, 255, 255, 0.58);
-    background: rgba(0, 0, 0, 0.24);
+    color: rgba(235, 235, 235, 0.58);
+    background: var(--panel-deep);
     font: 400 clamp(0.55rem, 0.7vw, 0.7rem)/1.5 "Intel One Mono", monospace;
     white-space: pre-wrap;
 }
