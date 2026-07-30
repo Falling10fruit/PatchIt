@@ -96,8 +96,11 @@ window.onkeydown = (e) => {
         console.log(Object.entries(window.room_snapshot.players).every(([player_id, player]) => player_id == window.this_user_id ? true : player.ready));
     }
 }
-function set_ready(ready_status: boolean) {
-    update(child(window.room_reference, "players/" + window.this_user_id), { ready: ready_status });
+async function set_ready(ready_status: boolean) {
+    await update(
+        child(window.room_reference, "players/" + window.this_user_id),
+        { ready: ready_status }
+    );
 
     if (window.this_user_id == window.room_snapshot.host && ready_status) {
         if (
@@ -180,6 +183,17 @@ async function update_room(data: Room | null) {
             for (const [user_id, {ready}] of Object.entries(data.players ?? {})) { all_ready &&= ready; }
             if (all_ready) start_game();
         };
+    } else if (current_screen() == Screens.GAMEOVER_SCREEN) {
+        if (data.playing_now) {
+            set_current_screen(Screens.PLAY_SCREEN);
+            update_challenge();
+        } else if (
+            data.host == window.this_user_id
+            && Object.values(data.players ?? {}).length > 0
+            && Object.values(data.players ?? {}).every((player) => player.ready)
+        ) {
+            start_game();
+        }
     } else if (current_screen() == Screens.PLAY_SCREEN) {
         update_challenge();
     }

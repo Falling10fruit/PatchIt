@@ -1,0 +1,514 @@
+.gameover-screen,
+.gameover-screen *,
+.gameover-screen *::before,
+.gameover-screen *::after {
+    box-sizing: border-box;
+}
+
+.gameover-screen {
+    --purple: var(--patchit-purple);
+    --purple-outline: rgba(86, 11, 173, 0.58);
+    --cyan: var(--patchit-cyan);
+    --panel-surface: rgba(26, 19, 32, 0.8);
+    --panel-deep: rgba(12, 12, 14, 0.72);
+    --ink: rgba(255, 255, 255, 0.9);
+    position: relative;
+    isolation: isolate;
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    overflow: auto;
+    color: var(--ink);
+    background: transparent;
+    font-family: "Intel One Mono", monospace;
+}
+
+.gameover-screen .matrix-shade {
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+    background: rgba(20, 20, 20, 0.82);
+    opacity: 0.78;
+}
+
+.gameover-content {
+    width: 100%;
+    min-height: 100dvh;
+    margin: 0 auto;
+    padding: clamp(1.2rem, 2.8vw, 2.7rem);
+}
+
+.gameover-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 2rem;
+}
+
+.gameover-brand {
+    margin: 0;
+    color: var(--cyan);
+    font-family: "Jaro", sans-serif;
+    font-size: clamp(4rem, 6.4vw, 6rem);
+    font-variation-settings: "opsz" 6;
+    font-weight: 400;
+    line-height: 0.9;
+    letter-spacing: -0.045em;
+    -webkit-text-stroke: clamp(1px, 0.14vw, 3px) var(--purple);
+    paint-order: stroke fill;
+}
+
+#gameover-leave-button {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 0.8rem 1.15rem;
+    color: rgba(255, 255, 255, 0.72);
+    background: rgba(0, 0, 0, 0.38);
+    font: 700 clamp(0.72rem, 1.1vw, 0.95rem)/1 "Intel One Mono", monospace;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+#gameover-leave-button:hover,
+#gameover-leave-button:focus-visible {
+    border-color: white;
+    color: white;
+    background: rgba(86, 11, 173, 0.46);
+    outline: none;
+}
+
+.gameover-heading {
+    margin: clamp(0.5rem, 1vh, 1rem) auto clamp(1.25rem, 3vh, 2.25rem);
+    text-align: center;
+}
+
+.gameover-heading p,
+.leaderboard-panel > header p,
+.rematch-panel > header p {
+    margin: 0 0 0.35rem;
+    color: var(--cyan);
+    font-size: clamp(0.62rem, 0.8vw, 0.78rem);
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+}
+
+.gameover-heading h1 {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.94);
+    font-size: clamp(3.75rem, 8vw, 7.5rem);
+    line-height: 0.9;
+    letter-spacing: 0.08em;
+    text-indent: 0.08em;
+    text-shadow: 0 0 2.2rem rgba(86, 11, 173, 0.45);
+}
+
+.gameover-heading > span {
+    display: inline-block;
+    margin-top: 0.8rem;
+    border: 1px solid rgba(90, 168, 191, 0.38);
+    padding: 0.45rem 0.75rem;
+    color: var(--cyan);
+    background: rgba(0, 0, 0, 0.3);
+    font-size: clamp(0.65rem, 0.85vw, 0.8rem);
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.results-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.75fr);
+    align-items: stretch;
+    gap: clamp(0.9rem, 1.4vw, 1.4rem);
+    width: min(100%, 70rem);
+    margin: 0 auto;
+}
+
+.leaderboard-panel,
+.rematch-panel {
+    border: clamp(0.4rem, 0.65vw, 0.65rem) solid var(--purple-outline);
+    overflow: hidden;
+    background: var(--panel-surface);
+    background-clip: padding-box;
+    box-shadow: 0 1.4rem 3rem rgba(0, 0, 0, 0.36);
+    backdrop-filter: blur(4px);
+}
+
+.leaderboard-panel {
+    min-width: 0;
+    padding: clamp(1.25rem, 2.2vw, 2rem);
+}
+
+.leaderboard-panel > header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.leaderboard-panel h2,
+.rematch-panel h2 {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: clamp(1.65rem, 2.5vw, 2.35rem);
+    line-height: 1;
+}
+
+.leaderboard-panel > header > span {
+    color: rgba(255, 255, 255, 0.44);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.winner-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.15rem 1rem;
+    border-left: 3px solid var(--cyan);
+    padding: 1rem 1.15rem;
+    background: rgba(90, 168, 191, 0.1);
+}
+
+.winner-card .winner-label {
+    grid-column: 1 / -1;
+    color: var(--cyan);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.17em;
+    text-transform: uppercase;
+}
+
+.winner-card strong {
+    min-width: 0;
+    overflow: hidden;
+    color: white;
+    font-size: clamp(1.2rem, 2vw, 1.75rem);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.winner-card > span:last-child {
+    color: rgba(255, 255, 255, 0.64);
+    font-size: clamp(0.7rem, 0.9vw, 0.82rem);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.empty-results {
+    margin: 0;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.45);
+    text-align: center;
+}
+
+.leaderboard-list {
+    display: grid;
+    gap: 0.5rem;
+    max-height: min(38vh, 22rem);
+    margin: 1rem 0 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    scrollbar-color: var(--cyan) rgba(0, 0, 0, 0.28);
+    scrollbar-width: thin;
+}
+
+.leaderboard-list li {
+    display: grid;
+    grid-template-columns: 2rem auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.8rem;
+    min-height: 4rem;
+    border-left: 3px solid rgba(255, 255, 255, 0.16);
+    padding: 0.55rem 0.75rem;
+    background: rgba(0, 0, 0, 0.26);
+}
+
+.leaderboard-list li.is-winner {
+    border-left-color: var(--cyan);
+}
+
+.leaderboard-list li.is-local-player {
+    background: rgba(86, 11, 173, 0.28);
+}
+
+.player-rank {
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.result-avatar {
+    display: grid;
+    place-items: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    color: #171717;
+    background: rgba(217, 217, 217, 0.74);
+    font-weight: 700;
+}
+
+.is-winner .result-avatar {
+    background: var(--cyan);
+}
+
+.result-player,
+.result-score {
+    display: grid;
+    min-width: 0;
+}
+
+.result-player strong {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(0.85rem, 1.1vw, 1rem);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result-player small,
+.result-score small {
+    color: rgba(255, 255, 255, 0.36);
+    font-size: 0.56rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.result-score {
+    justify-items: end;
+}
+
+.result-score strong {
+    color: var(--cyan);
+    font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+}
+
+.rematch-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: clamp(1.25rem, 2vw, 1.75rem);
+}
+
+.rematch-panel > header {
+    border-bottom: 1px solid rgba(90, 168, 191, 0.32);
+    padding-bottom: 1.1rem;
+}
+
+.ready-summary {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 1.25rem;
+}
+
+.ready-summary span {
+    color: rgba(255, 255, 255, 0.54);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.ready-summary strong {
+    color: var(--cyan);
+    font-size: 1.1rem;
+}
+
+.ready-meter {
+    height: 0.3rem;
+    margin-top: 0.55rem;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.ready-meter span {
+    display: block;
+    height: 100%;
+    background: var(--cyan);
+    transition: width 180ms ease;
+}
+
+.ready-roster {
+    display: grid;
+    gap: 0.5rem;
+    max-height: 12rem;
+    margin: 1.15rem 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+    scrollbar-color: var(--cyan) rgba(0, 0, 0, 0.28);
+    scrollbar-width: thin;
+}
+
+.ready-roster li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-height: 2.5rem;
+    padding: 0.45rem 0.6rem;
+    background: var(--panel-deep);
+}
+
+.ready-roster li > span {
+    min-width: 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.ready-roster li strong {
+    color: rgba(255, 255, 255, 0.32);
+    font-size: 0.56rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.ready-roster li.is-ready {
+    background: rgba(90, 168, 191, 0.1);
+}
+
+.ready-roster li.is-ready strong {
+    color: var(--cyan);
+}
+
+#rematch-button {
+    width: 100%;
+    margin-top: auto;
+    border: 2px solid var(--purple-outline);
+    padding: 0.9rem 1rem;
+    color: rgba(255, 255, 255, 0.88);
+    background: rgba(86, 11, 173, 0.38);
+    font-family: "Intel One Mono", monospace;
+    text-align: left;
+    cursor: pointer;
+}
+
+#rematch-button span,
+#rematch-button small {
+    display: block;
+}
+
+#rematch-button span {
+    font-size: clamp(0.95rem, 1.3vw, 1.15rem);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+#rematch-button small {
+    margin-top: 0.2rem;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: 0.62rem;
+}
+
+#rematch-button:hover,
+#rematch-button:focus-visible {
+    border-color: var(--cyan);
+    background: rgba(86, 11, 173, 0.62);
+    outline: none;
+}
+
+#rematch-button.is-ready {
+    border-color: var(--cyan);
+    color: #171717;
+    background: var(--cyan);
+}
+
+#rematch-button.is-ready small {
+    color: rgba(0, 0, 0, 0.6);
+}
+
+#rematch-button:disabled {
+    cursor: wait;
+    opacity: 0.52;
+}
+
+.rematch-note {
+    min-height: 2.6em;
+    margin: 0.75rem 0 0;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.62rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 860px) {
+    .gameover-content {
+        padding: 1.1rem;
+    }
+
+    .gameover-brand {
+        font-size: clamp(3.8rem, 19vw, 5rem);
+    }
+
+    #gameover-leave-button {
+        padding: 0.65rem 0.7rem;
+        font-size: 0.62rem;
+    }
+
+    .gameover-heading {
+        margin-top: 1.25rem;
+    }
+
+    .gameover-heading h1 {
+        font-size: clamp(3.25rem, 13vw, 5.5rem);
+    }
+
+    .results-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .leaderboard-list {
+        max-height: none;
+    }
+
+    .ready-roster {
+        max-height: 10rem;
+    }
+}
+
+@media (max-width: 520px) {
+    .gameover-header {
+        align-items: flex-start;
+    }
+
+    .gameover-brand {
+        font-size: 3.7rem;
+    }
+
+    .gameover-heading {
+        margin-top: 2.25rem;
+    }
+
+    .leaderboard-panel,
+    .rematch-panel {
+        border-width: 0.4rem;
+        padding: 1rem;
+    }
+
+    .leaderboard-panel > header {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+
+    .leaderboard-list li {
+        grid-template-columns: 1.6rem auto minmax(0, 1fr) auto;
+        gap: 0.55rem;
+        padding-inline: 0.55rem;
+    }
+
+    .result-avatar {
+        width: 2rem;
+        height: 2rem;
+    }
+}

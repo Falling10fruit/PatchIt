@@ -25,6 +25,7 @@ const REFILL_BATCH_SIZE = 4;
 const REFILL_THRESHOLD = 3;
 const AI_GENERATION_MAX_ATTEMPTS = 3;
 const CHALLENGE_VALIDATION_TIMEOUT_MS = 2500;
+const MATCH_DURATION_MS = 5 * 60 * 1000;
 const AI_MODEL = "qwen/qwen3.6-27b";
 const use_local_challenges = (
     import.meta.env.VITE_USE_LOCAL_CHALLENGES !== "false"
@@ -44,13 +45,23 @@ async function start_game() {
     try {
         const challenge_pool = await generate_challenge_batch(0, INITIAL_POOL_SIZE);
         const start_time = Date.now();
+        const player_resets: Record<string, string | number | boolean> = {};
+
+        for (const player_id of Object.keys(window.room_snapshot.players ?? {})) {
+            player_resets[`players/${player_id}/ready`] = false;
+            player_resets[`players/${player_id}/code`] = "";
+            player_resets[`players/${player_id}/challenge_index`] = 0;
+            player_resets[`players/${player_id}/score`] = 0;
+            player_resets[`players/${player_id}/last_completed_at`] = 0;
+        }
 
         await update(window.room_reference, {
             playing_now: true,
             start_time,
-            finish_time: start_time + 5 * 60 * 10,
+            finish_time: start_time + MATCH_DURATION_MS,
             challenge_pool,
-            generation_status: "idle"
+            generation_status: "idle",
+            ...player_resets
         });
     } finally {
         is_starting_game = false;
