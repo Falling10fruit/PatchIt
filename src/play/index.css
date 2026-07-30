@@ -205,42 +205,130 @@
     font: inherit;
 }
 
-.editor-stack {
+.coding-surface {
+    --editor-line-height: 1.5rem;
+    position: relative;
+    isolation: isolate;
     display: grid;
-    grid-template-rows: minmax(0, 2.8fr) minmax(8rem, 0.8fr);
-    gap: clamp(0.65rem, 1vw, 1rem);
     min-width: 0;
     min-height: 0;
+    overflow: visible;
 }
 
-.code-panel,
-.console-panel {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
+.coding-surface::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    top: 0.55rem;
+    right: -0.5rem;
+    bottom: -0.5rem;
+    left: 0.55rem;
+    border-right: 0.28rem solid rgba(86, 11, 173, 0.5);
+    border-bottom: 0.28rem solid rgba(86, 11, 173, 0.5);
+    background: rgba(86, 11, 173, 0.08);
+    pointer-events: none;
 }
 
-.panel-header {
+.coding-surface::after {
+    content: "";
+    position: absolute;
+    z-index: 6;
+    top: -0.4rem;
+    left: clamp(1rem, 2vw, 1.75rem);
+    width: clamp(3.5rem, 6vw, 5rem);
+    height: 0.4rem;
+    background: rgba(86, 11, 173, 0.78);
+    pointer-events: none;
+}
+
+.editor-titlebar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
     min-height: 3rem;
     border-bottom: 1px solid var(--neutral-border);
-    padding: 0.55rem 1rem;
+    padding: 0 0.8rem 0 0;
     background: var(--panel-raised);
+    overflow: hidden;
 }
 
-.panel-header h2 {
-    margin: 0;
+.file-tabs {
+    align-self: stretch;
+    display: flex;
+    min-width: 0;
+}
+
+.file-tab {
+    display: flex;
+    align-items: center;
+    align-self: center;
+    gap: 0.38rem;
+    min-width: 0;
+    height: 2.15rem;
+    border: 0;
+    border-right: 1px solid var(--neutral-border);
+    border-bottom: 2px solid transparent;
+    padding: 0.38rem 0.62rem;
+    color: rgba(255, 255, 255, 0.62);
+    background: rgba(24, 24, 24, 0.72);
+    font: 400 clamp(0.58rem, 0.68vw, 0.68rem)/1 "Intel One Mono", monospace;
+}
+
+.file-tab.is-active {
+    border-bottom-color: var(--purple);
     color: rgba(255, 255, 255, 0.9);
-    font-size: clamp(1rem, 1.4vw, 1.35rem);
-    line-height: 1;
-    text-transform: uppercase;
+    background: var(--panel-deep);
 }
 
-.panel-header button {
+.file-tab span {
+    color: #d7a85c;
+    font-size: 0.52rem;
+    font-weight: 700;
+}
+
+.file-tab strong {
+    overflow: hidden;
+    font: inherit;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.file-tab i {
+    width: 0.32rem;
+    height: 0.32rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.38);
+}
+
+.editor-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.problem-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: rgba(255, 255, 255, 0.48);
+    font-size: clamp(0.56rem, 0.68vw, 0.68rem);
+    white-space: nowrap;
+}
+
+.problem-indicator i {
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.24);
+}
+
+.problem-indicator i.has-error {
+    background: #d46a72;
+}
+
+.editor-actions > button {
     border: 1px solid rgba(90, 168, 191, 0.7);
     padding: 0.5rem 0.75rem;
     color: var(--cyan);
@@ -250,54 +338,412 @@
     cursor: pointer;
 }
 
-.panel-header button:hover,
-.panel-header button:focus-visible {
+.editor-actions > button:hover,
+.editor-actions > button:focus-visible {
     color: #111;
     background: var(--cyan);
     outline: none;
 }
 
-.panel-header > span {
+.editor-pane {
+    display: grid;
+    grid-template-columns: clamp(3rem, 4.2vw, 3.7rem) minmax(0, 1fr);
+    min-width: 0;
+    min-height: 0;
+    background: var(--panel-deep);
+}
+
+.editor-gutter {
+    min-height: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 1rem 0;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.28);
+    background: rgba(35, 35, 35, 0.96);
+    font: 400 clamp(0.7rem, 0.8vw, 0.8rem)/var(--editor-line-height) "Intel One Mono", monospace;
+}
+
+.editor-gutter > span {
+    display: grid;
+    grid-template-columns: 1rem minmax(0, 1fr);
+    align-items: center;
+    height: var(--editor-line-height);
+    padding-right: 0.65rem;
+    text-align: right;
+}
+
+.editor-gutter b {
+    font: inherit;
+}
+
+.editor-gutter i {
+    justify-self: center;
+    width: 0;
+    height: 0;
+    border-top: 0.28rem solid transparent;
+    border-bottom: 0.28rem solid transparent;
+    border-left: 0.38rem solid transparent;
+}
+
+.editor-gutter .has-error {
+    color: rgba(255, 255, 255, 0.72);
+    background: rgba(212, 106, 114, 0.08);
+}
+
+.editor-gutter .has-error i {
+    border-left-color: #d46a72;
+}
+
+.editor-code-area {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--panel-deep);
+}
+
+.syntax-layer,
+#code_editor {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    padding: 1rem 1.2rem;
+    outline: none;
+    font: 400 clamp(0.76rem, 0.9vw, 0.9rem)/var(--editor-line-height) "Intel One Mono", monospace;
+    tab-size: 4;
+    white-space: pre;
+}
+
+.syntax-layer {
+    z-index: 1;
+    overflow: hidden;
+    color: rgba(220, 220, 220, 0.72);
+    background: var(--panel-deep);
+    pointer-events: none;
+}
+
+.syntax-layer code {
+    display: block;
+    min-width: max-content;
+    font: inherit;
+}
+
+.syntax-line {
+    display: block;
+    height: var(--editor-line-height);
+}
+
+.syntax-keyword {
+    color: #b48ead;
+}
+
+.syntax-string {
+    color: #c99f7a;
+}
+
+.syntax-number,
+.syntax-literal {
+    color: #9fbc8f;
+}
+
+.syntax-comment {
+    color: #667866;
+}
+
+.syntax-function {
+    color: #c7b77d;
+}
+
+.syntax-operator {
+    color: #78a7b5;
+}
+
+.syntax-error {
+    border-radius: 0.1rem;
+    background: rgba(212, 106, 114, 0.1);
+    text-decoration-line: underline;
+    text-decoration-style: wavy;
+    text-decoration-color: #d46a72;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 0.18em;
+}
+
+#code_editor {
+    z-index: 2;
+    resize: none;
+    overflow: auto;
+    color: transparent;
+    caret-color: rgba(255, 255, 255, 0.88);
+    background: transparent;
+    -webkit-text-fill-color: transparent;
+    scrollbar-color: var(--cyan) rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
+}
+
+#code_editor::selection {
+    background: rgba(90, 168, 191, 0.26);
+}
+
+.editor-code-area:focus-within {
+    box-shadow: inset 0 0 0 2px rgba(90, 168, 191, 0.5);
+}
+
+.editor-divider {
+    position: relative;
+    z-index: 4;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    min-height: 0.65rem;
+    border: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0;
+    background: var(--panel-raised);
+    cursor: row-resize;
+    touch-action: none;
+}
+
+.editor-divider span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.editor-divider span i {
+    width: 0.24rem;
+    height: 0.24rem;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.editor-divider:hover,
+.editor-divider:focus-visible,
+.coding-surface.is-resizing .editor-divider {
+    background: rgba(86, 11, 173, 0.38);
+    outline: none;
+}
+
+.editor-divider:hover span i,
+.editor-divider:focus-visible span i,
+.coding-surface.is-resizing .editor-divider span i {
+    background: var(--cyan);
+}
+
+.output-pane {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    min-height: 0;
+    overflow: hidden;
+    background: var(--panel-deep);
+}
+
+.output-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 2.65rem;
+    border-bottom: 1px solid var(--neutral-border);
+    padding-right: 0.8rem;
+    background: var(--panel-raised);
+}
+
+.output-toolbar nav {
+    align-self: stretch;
+    display: flex;
+}
+
+.output-toolbar button {
+    border: 0;
+    border-bottom: 2px solid transparent;
+    padding: 0.55rem 0.85rem;
+    color: rgba(255, 255, 255, 0.46);
+    background: transparent;
+    font: 700 clamp(0.65rem, 0.8vw, 0.78rem)/1 "Intel One Mono", monospace;
+    cursor: pointer;
+}
+
+.output-toolbar button:hover,
+.output-toolbar button:focus-visible,
+.output-toolbar button.is-active {
+    color: rgba(255, 255, 255, 0.88);
+    outline: none;
+}
+
+.output-toolbar button.is-active {
+    border-bottom-color: var(--purple);
+}
+
+.output-toolbar > span {
     color: var(--cyan);
-    font-size: 0.68rem;
+    font-size: 0.62rem;
     font-weight: 700;
     letter-spacing: 0.1em;
     text-transform: uppercase;
 }
 
-#code_editor {
-    flex: 1;
-    min-height: 0;
-    width: 100%;
-    resize: none;
-    border: 0;
-    border-radius: 0;
-    padding: clamp(1rem, 1.6vw, 1.5rem);
+.testcase-view {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    margin: 0;
+    overflow: hidden;
+}
+
+.testcase-tabs {
+    display: flex;
+    gap: 0.4rem;
+    padding: 0.7rem 0.85rem 0.4rem;
+}
+
+.testcase-tabs button {
+    border: 1px solid transparent;
+    border-radius: 0.25rem;
+    padding: 0.42rem 0.65rem;
+    color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.05);
+    font: 700 clamp(0.6rem, 0.72vw, 0.7rem)/1 "Intel One Mono", monospace;
+    cursor: pointer;
+}
+
+.testcase-tabs button:hover,
+.testcase-tabs button:focus-visible,
+.testcase-tabs button.is-active {
+    color: rgba(255, 255, 255, 0.88);
     outline: none;
-    color: rgba(248, 248, 242, 0.88);
-    caret-color: var(--cyan);
-    background: var(--panel-deep);
-    font: 400 clamp(0.76rem, 0.95vw, 0.94rem)/1.65 "Intel One Mono", monospace;
+}
+
+.testcase-tabs button.is-active {
+    border-color: rgba(86, 11, 173, 0.72);
+    background: rgba(86, 11, 173, 0.2);
+}
+
+.testcase-details {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-content: start;
+    gap: 0.5rem 0.8rem;
+    padding: 0.55rem 0.9rem 1rem;
+    overflow: auto;
+    font-size: clamp(0.66rem, 0.78vw, 0.78rem);
     scrollbar-color: var(--cyan) rgba(255, 255, 255, 0.08);
     scrollbar-width: thin;
-    tab-size: 4;
-    white-space: pre;
 }
 
-#code_editor:focus {
-    box-shadow: inset 0 0 0 2px rgba(90, 168, 191, 0.5);
+.testcase-details span {
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 700;
+    text-transform: uppercase;
 }
 
-.console-panel pre {
-    flex: 1;
+.testcase-details code {
+    color: rgba(255, 255, 255, 0.76);
+    font: inherit;
+}
+
+.console-output {
     min-height: 0;
     margin: 0;
-    padding: 1rem 1.25rem;
+    padding: 0.45rem 0;
     overflow: auto;
-    color: rgba(235, 235, 235, 0.62);
-    background: var(--panel-deep);
-    font: 400 clamp(0.7rem, 0.85vw, 0.82rem)/1.55 "Intel One Mono", monospace;
+    color: rgba(235, 235, 235, 0.58);
+    font: 400 clamp(0.68rem, 0.8vw, 0.8rem)/1.55 "Intel One Mono", monospace;
+    scrollbar-color: var(--cyan) rgba(255, 255, 255, 0.08);
+    scrollbar-width: thin;
     white-space: pre-wrap;
+}
+
+.console-entry {
+    display: grid;
+    grid-template-columns: 1.1rem minmax(0, 1fr);
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.3rem 0.9rem;
+}
+
+.console-entry + .console-entry {
+    border-top: 1px solid rgba(255, 255, 255, 0.035);
+}
+
+.console-entry span {
+    color: rgba(255, 255, 255, 0.28);
+    font-weight: 700;
+    text-align: center;
+}
+
+.console-entry code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    color: rgba(235, 235, 235, 0.72);
+    font: inherit;
+}
+
+.console-info span,
+.console-info code {
+    color: var(--cyan);
+}
+
+.console-warn span,
+.console-warn code {
+    color: #d7a85c;
+}
+
+.console-error {
+    background: rgba(212, 106, 114, 0.07);
+}
+
+.console-error span,
+.console-error code {
+    color: #d46a72;
+}
+
+.console-system code {
+    color: rgba(255, 255, 255, 0.38);
+}
+
+.console-empty {
+    margin: 0;
+    padding: 0.45rem 1rem;
+    color: rgba(255, 255, 255, 0.34);
+}
+
+.problem-content::-webkit-scrollbar,
+#code_editor::-webkit-scrollbar,
+.testcase-details::-webkit-scrollbar,
+.console-output::-webkit-scrollbar,
+.players-code-scroll::-webkit-scrollbar {
+    width: 0.5rem;
+    height: 0.5rem;
+}
+
+.problem-content::-webkit-scrollbar-track,
+#code_editor::-webkit-scrollbar-track,
+.testcase-details::-webkit-scrollbar-track,
+.console-output::-webkit-scrollbar-track,
+.players-code-scroll::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.problem-content::-webkit-scrollbar-thumb,
+#code_editor::-webkit-scrollbar-thumb,
+.testcase-details::-webkit-scrollbar-thumb,
+.console-output::-webkit-scrollbar-thumb,
+.players-code-scroll::-webkit-scrollbar-thumb {
+    border: 1px solid rgba(24, 24, 24, 0.9);
+    background: rgba(90, 168, 191, 0.62);
+}
+
+.problem-content::-webkit-scrollbar-button,
+#code_editor::-webkit-scrollbar-button,
+.testcase-details::-webkit-scrollbar-button,
+.console-output::-webkit-scrollbar-button,
+.players-code-scroll::-webkit-scrollbar-button {
+    display: none;
 }
 
 .players-code-panel,
@@ -433,7 +879,7 @@
         margin-bottom: 0;
     }
 
-    .editor-stack {
+    .coding-surface {
         min-height: 38rem;
     }
 
@@ -461,7 +907,7 @@
         margin: calc(-1 * var(--workspace-y)) 0 0;
     }
 
-    .editor-stack {
+    .coding-surface {
         min-height: 42rem;
     }
 
