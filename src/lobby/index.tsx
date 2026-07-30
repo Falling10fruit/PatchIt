@@ -38,13 +38,13 @@ export default function LobbyScreen() {
                                 fallback={<li class="empty-player-list">Waiting for players...</li>}
                             >
                                 {(player) => (
-                                    <li classList={{ "player-ready": player.ready }}>
+                                    <li classList={{ "player-ready": player[1].ready }}>
                                         <span class="player-avatar">
-                                            {player.name.slice(0, 1).toUpperCase()}
+                                            {player[1].name.slice(0, 1).toUpperCase()}
                                         </span>
-                                        <span class="player-name">{player.name}</span>
+                                        <span class="player-name">{player[1].name}</span>
                                         <span class="player-status">
-                                            {player.ready ? "Ready" : "Not ready"}
+                                            {player[1].ready ? "Ready" : "Not ready"}
                                         </span>
                                     </li>
                                 )}

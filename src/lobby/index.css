@@ -104,6 +104,9 @@
     align-items: center;
     padding-top: clamp(2.1rem, 3.2vh, 3rem);
     text-align: center;
+
+    /**hey yapheth so we need the player to be able to like yk copy the lobby code text*/
+    user-select: text;
 }
 
 .room-code-panel h1 {
