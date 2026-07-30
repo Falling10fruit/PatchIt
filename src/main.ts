@@ -28,7 +28,7 @@ for (let i = 0; i < 10; i++) {
 const [new_room_player_count, set_new_room_player_count] = createSignal(4);
 const [room_max_player_count, set_room_max_player_count] = createSignal(4);
 const [room_id, set_room_id] = createSignal("");
-const [this_player_name, set_this_player_name] = createSignal(["john", "gabrielle", "houston", "tommy", "harrison", "joey", "terry", "anna"][Math.floor(Math.random() * 8)]);
+const [this_player_name, set_this_player_name] = createSignal(["john", "gabrielle", "houston", "tommy", "harrison", "joey", "terry", "anna", "jeff", "arnold", "gabby", "jones"][Math.floor(Math.random() * 12)]);
 const [players_joined, set_players_joined] = createSignal<[string, Player][]>([]);
 
 function create_room () {
@@ -109,16 +109,17 @@ function enter_lobby (reference: DatabaseReference) {
     onValue(window.room_reference, (snapshot) => { update_room(snapshot.val()); });
 }
 
-async function leave_room() {
+function leave_room() {
     set_current_screen(Screens.WELCOME_SCREEN);
     window.room_snapshot.host == "";
 
-    await update(window.room_reference, { current_player_count: increment(-1), ["players/" + window.this_user_id]: null })
     if (window.room_snapshot.host == window.this_user_id) {
         if (window.room_snapshot.current_player_count == 1) {
             remove(window.room_reference);
         } else {
-            for (const id in Object.entries(window.room_snapshot.players)) {
+            update(window.room_reference, { current_player_count: increment(-1), ["players/" + window.this_user_id]: null });
+
+            for (const id in window.room_snapshot.players) {
                 if (id != window.this_user_id) {
                     update(window.room_reference, { host: id });
                 }
