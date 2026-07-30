@@ -1,11 +1,479 @@
-main {
-    height: 100%;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
+.play-screen,
+.play-screen *,
+.play-screen *::before,
+.play-screen *::after {
+    box-sizing: border-box;
 }
 
-textarea {
+.play-screen {
+    --purple: var(--patchit-purple);
+    --purple-outline: var(--patchit-purple-outline);
+    --panel-surface: var(--patchit-purple-panel);
+    --cyan: var(--patchit-cyan);
+    --ink: rgba(255, 255, 255, 0.82);
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    overflow: auto;
+    color: var(--ink);
+    background: #000;
+    font-family: "Intel One Mono", monospace;
+}
+
+.play-screen .matrix-rain,
+.play-screen .matrix-shade {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+.play-screen .matrix-rain {
+    z-index: -2;
+    display: block;
+    background: #000;
+}
+
+.play-screen .matrix-shade {
+    z-index: -1;
+    background: rgba(37, 37, 37, 0.78);
+    opacity: 0.68;
+}
+
+.loading-view {
+    display: grid;
+    place-items: center;
+    gap: 1rem;
+    border: clamp(0.35rem, 0.55vw, 0.65rem) solid var(--purple-outline);
+    padding: clamp(1.5rem, 4vw, 3rem);
+    background: var(--panel-surface);
+    backdrop-filter: blur(2px);
+}
+
+.loading-view h1 {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(1rem, 2vw, 1.5rem);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.loading-view img {
+    display: block;
+    width: min(9rem, 70vw);
+    height: auto;
+}
+
+.player-workspace {
+    --workspace-y: clamp(3rem, 8vh, 6rem);
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.35fr) minmax(0, 0.95fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: clamp(0.65rem, 1vw, 1rem);
+    width: 96vw;
+    height: 100dvh;
+    min-height: 38rem;
+    margin: auto;
+    padding: var(--workspace-y) 0;
+}
+
+.play-panel,
+.player-code-card {
+    border: clamp(0.35rem, 0.55vw, 0.65rem) solid var(--purple-outline);
+    overflow: hidden;
+    background: var(--panel-surface);
+    background-clip: padding-box;
+    box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(2px);
+}
+
+.problem-panel {
+    --timer-height: clamp(3rem, 6vh, 3.75rem);
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    margin-block: calc(-1 * var(--workspace-y));
+    border-top: 0;
+    border-right-color: rgba(86, 11, 173, 0.34);
+    border-bottom: 0;
+    border-left-color: rgba(86, 11, 173, 0.34);
+    border-image: none;
+    overflow: hidden;
+    background: var(--panel-surface);
+    box-shadow: none;
+}
+
+.timer-bar {
+    position: absolute;
+    z-index: 3;
+    top: 0;
+    right: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    height: var(--timer-height);
+    border-bottom: 1px solid rgba(86, 11, 173, 0.34);
+    padding: 0.55rem 1rem;
+    color: rgba(255, 255, 255, 0.88);
+    background: rgba(18, 10, 27, 0.58);
+    box-shadow: none;
+    backdrop-filter: blur(12px) saturate(115%);
+    font-size: clamp(0.78rem, 1vw, 1rem);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+}
+
+.timer-bar strong {
+    color: rgba(255, 255, 255, 0.86);
+    font: inherit;
+}
+
+.problem-content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: flex-start;
+    min-height: 0;
+    padding: calc(var(--timer-height) + clamp(1.25rem, 2.4vw, 2.5rem))
+        clamp(1.25rem, 2.4vw, 2.5rem)
+        clamp(1.25rem, 2.4vw, 2.5rem);
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.14);
+    scrollbar-color: var(--cyan) rgba(0, 0, 0, 0.32);
+    scrollbar-width: thin;
+}
+
+.problem-content > p:first-child {
+    margin: 0 0 0.65rem;
+    color: var(--cyan);
+    font-size: clamp(0.62rem, 0.8vw, 0.76rem);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+}
+
+.problem-content h1 {
+    margin: 0 0 1.25rem;
+    color: rgba(255, 255, 255, 0.94);
+    font-size: clamp(1.5rem, 2.2vw, 2.5rem);
+    line-height: 1.15;
+}
+
+.problem-content > p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.66);
+    font-size: clamp(0.82rem, 1vw, 1rem);
+    line-height: 1.65;
+}
+
+.problem-content > p + p {
+    margin-top: 1rem;
+}
+
+.test-case {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.45rem 0.8rem;
+    margin-top: clamp(1.5rem, 3vh, 2.5rem);
+    border-left: 3px solid var(--cyan);
+    padding: 0.9rem 1rem;
+    background: rgba(0, 0, 0, 0.24);
+    font-size: clamp(0.7rem, 0.9vw, 0.86rem);
+}
+
+.test-case span {
+    color: rgba(255, 255, 255, 0.45);
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.test-case code {
+    color: rgba(255, 255, 255, 0.86);
+    font: inherit;
+}
+
+.editor-stack {
+    display: grid;
+    grid-template-rows: minmax(0, 2.8fr) minmax(8rem, 0.8fr);
+    gap: clamp(0.65rem, 1vw, 1rem);
+    min-width: 0;
+    min-height: 0;
+}
+
+.code-panel,
+.console-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+}
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3rem;
+    border-bottom: 2px solid rgba(90, 168, 191, 0.42);
+    padding: 0.55rem 1rem;
+    background: rgba(0, 0, 0, 0.24);
+}
+
+.panel-header h2 {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: clamp(1rem, 1.4vw, 1.35rem);
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.panel-header button {
+    border: 1px solid rgba(90, 168, 191, 0.62);
+    padding: 0.5rem 0.75rem;
+    color: var(--cyan);
+    background: rgba(90, 168, 191, 0.08);
+    font: 700 clamp(0.62rem, 0.75vw, 0.72rem)/1 "Intel One Mono", monospace;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.panel-header button:hover,
+.panel-header button:focus-visible {
+    color: #111;
+    background: var(--cyan);
+    outline: none;
+}
+
+.panel-header > span {
+    color: var(--cyan);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+#code_editor {
+    flex: 1;
+    min-height: 0;
+    width: 100%;
     resize: none;
+    border: 0;
+    border-radius: 0;
+    padding: clamp(1rem, 1.6vw, 1.5rem);
+    outline: none;
+    color: rgba(255, 255, 255, 0.84);
+    caret-color: var(--cyan);
+    background: rgba(0, 0, 0, 0.3);
+    font: 400 clamp(0.76rem, 0.95vw, 0.94rem)/1.65 "Intel One Mono", monospace;
+    scrollbar-color: var(--cyan) rgba(0, 0, 0, 0.32);
+    scrollbar-width: thin;
+    tab-size: 4;
+    white-space: pre;
+}
+
+#code_editor:focus {
+    box-shadow: inset 0 0 0 2px rgba(90, 168, 191, 0.5);
+}
+
+.console-panel pre {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 1rem 1.25rem;
+    overflow: auto;
+    color: rgba(255, 255, 255, 0.58);
+    background: rgba(0, 0, 0, 0.34);
+    font: 400 clamp(0.7rem, 0.85vw, 0.82rem)/1.55 "Intel One Mono", monospace;
+    white-space: pre-wrap;
+}
+
+.players-code-panel,
+.players-code-scroll {
+    min-width: 0;
+    min-height: 0;
+}
+
+.players-code-panel {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    gap: clamp(0.65rem, 1vw, 1rem);
+    overflow: hidden;
+}
+
+.players-code-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 3rem;
+    border: clamp(0.35rem, 0.55vw, 0.65rem) solid var(--purple-outline);
+    padding: 0.55rem 0.8rem;
+    background: var(--panel-surface);
+    backdrop-filter: blur(2px);
+}
+
+.players-code-header span {
+    color: rgba(255, 255, 255, 0.58);
+    font-size: clamp(0.58rem, 0.72vw, 0.7rem);
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.players-code-header strong {
+    overflow: hidden;
+    color: var(--cyan);
+    font-size: clamp(0.76rem, 1vw, 0.95rem);
+    letter-spacing: 0.14em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.players-code-scroll {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-auto-rows: clamp(9rem, 23vh, 12rem);
+    align-content: start;
+    gap: clamp(0.65rem, 1vw, 1rem);
+    height: 100%;
+    padding-right: 0.25rem;
+    overflow-y: auto;
+    scrollbar-color: var(--cyan) rgba(0, 0, 0, 0.32);
+    scrollbar-width: thin;
+}
+
+.player-code-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.player-code-card header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-height: 2.5rem;
+    border-bottom: 1px solid rgba(90, 168, 191, 0.34);
+    padding: 0.55rem 0.7rem;
+    background: rgba(0, 0, 0, 0.26);
+}
+
+.player-code-card header span {
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.82);
+    font-size: clamp(0.66rem, 0.8vw, 0.8rem);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.player-code-card header i {
+    color: var(--cyan);
+    font-size: clamp(0.5rem, 0.6vw, 0.62rem);
+    font-style: normal;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.player-code-card pre {
+    flex: 1;
+    min-height: 0;
+    margin: 0;
+    padding: 0.75rem;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 0.58);
+    background: rgba(0, 0, 0, 0.24);
+    font: 400 clamp(0.55rem, 0.7vw, 0.7rem)/1.5 "Intel One Mono", monospace;
+    white-space: pre-wrap;
+}
+
+.player-code-card.is-empty {
+    border-color: rgba(86, 11, 173, 0.24);
+    opacity: 0.7;
+}
+
+.player-code-card.is-empty header i,
+.player-code-card.is-empty pre {
+    color: rgba(255, 255, 255, 0.32);
+}
+
+@media (max-width: 980px) {
+    .play-screen {
+        place-items: start center;
+    }
+
+    .player-workspace {
+        --workspace-y: clamp(2rem, 5vh, 3rem);
+        grid-template-columns: minmax(15rem, 0.85fr) minmax(18rem, 1.15fr);
+        grid-template-rows: auto auto;
+        width: min(94vw, 56rem);
+        height: auto;
+        min-height: 0;
+        padding: var(--workspace-y) 0 2rem;
+    }
+
+    .problem-panel {
+        height: 100dvh;
+        min-height: 38rem;
+        margin-top: calc(-1 * var(--workspace-y));
+        margin-bottom: 0;
+    }
+
+    .editor-stack {
+        min-height: 38rem;
+    }
+
+    .players-code-panel {
+        grid-column: 1 / -1;
+        height: 30rem;
+    }
+
+}
+
+@media (max-width: 640px) {
+    .player-workspace {
+        --workspace-y: 4rem;
+        display: flex;
+        flex-direction: column;
+        width: calc(100% - 2rem);
+        padding: 4rem 0 2rem;
+    }
+
+    .problem-panel {
+        flex: none;
+        width: 100%;
+        height: 100dvh;
+        min-height: 34rem;
+        margin: calc(-1 * var(--workspace-y)) 0 0;
+    }
+
+    .editor-stack {
+        min-height: 42rem;
+    }
+
+    .players-code-panel {
+        height: 34rem;
+    }
+
+    .players-code-scroll {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .play-screen .matrix-rain {
+        opacity: 0.72;
+    }
 }
