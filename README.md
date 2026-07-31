@@ -10,3 +10,13 @@ This app presents you with matchmaking capabilities so you and your friend can c
 - lobby settings
 - player colors
 - bug attack when someone finishes their debugging like tetris
+
+# How to run
+1. Download the repo
+2. Run `npm install` in the terminal
+3. Add an `.env` file with the variables
+```python
+VITE_API_AI_KEY = "YOUR_OPENAI_API_KEY"
+VITE_USE_LOCAL_CHALLENGES=false
+```
+4. And finally `npm run dev` to enjoy
