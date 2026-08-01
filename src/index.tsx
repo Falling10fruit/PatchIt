@@ -6,6 +6,7 @@ import MatrixRain from "./components/MatrixRain.tsx";
 import Gameover from "./gameover/index.tsx";
 
 enum Screens {
+    LOGIN_SCREEN = "login_screen",
     WELCOME_SCREEN = "welcome_screen",
     LOBBY_SCREEN = "lobby_screen",
     PLAY_SCREEN = "play_screen",

@@ -68,3 +68,7 @@ node_modules/
 
 # dataconnect generated files
 .dataconnect
+
+# local stuff
+.wrangler/
+dist/
