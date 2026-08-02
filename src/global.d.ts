@@ -26,8 +26,8 @@ declare global {
     }
 
     interface TestCase {
-    input_args: string[];
-    expected_output: string;
+        input_args: string[];
+        expected_output: string;
     }
 
     interface Challenge {

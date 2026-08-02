@@ -7,11 +7,6 @@ import { createSignal } from "solid-js";
 import { OpenAI } from "openai";
 import { start_game, update_challenge } from "./play/index.tsx";
 
-window.open_ai_client = new OpenAI({
-    apiKey: import.meta.env.VITE_API_AI_KEY,
-    baseURL: "https://api.groq.com/openai/v1",
-    dangerouslyAllowBrowser: true
-});
 const app = initializeApp({
     apiKey: "AIzaSyB-_eEMOa9D_Q1bIREy8YqLFw1ve0BLUnE",
     authDomain: "patchit-8af4d.firebaseapp.com",
